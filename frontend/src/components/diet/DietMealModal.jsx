@@ -11,6 +11,9 @@ const DietMealModal = ({ selectedMeal, setSelectedMeal }) => {
         onClick={e => e.stopPropagation()}
         style={{ 
           maxWidth: '550px', 
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column',
           padding: 0, 
           background: 'var(--surface-color)', 
           borderRadius: '32px',
@@ -70,7 +73,7 @@ const DietMealModal = ({ selectedMeal, setSelectedMeal }) => {
         </div>
 
         {/* Content Section */}
-        <div style={{ padding: '32px' }}>
+        <div style={{ padding: '32px', overflowY: 'auto', flex: 1 }} className="custom-scrollbar">
           <div style={{ marginBottom: '32px' }}>
             <h4 style={{ 
               fontSize: '1.1rem', 
