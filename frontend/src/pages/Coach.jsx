@@ -5,7 +5,7 @@ import { useToast } from '../context/ToastContext';
 
 const Coach = () => {
   const [messages, setMessages] = useState([
-    { role: 'assistant', text: 'Merhaba! Ben Antigravity AI Antrenörün. Bugün sana antrenman veya beslenme konusunda nasıl yardımcı olabilirim?' }
+    { role: 'assistant', text: 'Merhaba! Ben AI Antrenörün. Bugün sana antrenman veya beslenme konusunda nasıl yardımcı olabilirim?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);

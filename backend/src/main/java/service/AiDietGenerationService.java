@@ -111,7 +111,7 @@ public class AiDietGenerationService {
     }
 
     private String buildPrompt(AiDietRequest request, MetricsResponse metrics) {
-        String goalText = metrics.getGoal();
+        String goalText = metrics.getGoal() != null ? metrics.getGoal().name() : "MAINTENANCE";
         String rules = "";
         
         if ("FAT_LOSS".equalsIgnoreCase(goalText)) {
