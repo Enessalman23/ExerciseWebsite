@@ -2,9 +2,8 @@ package service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dto.request.AiDietRequest;
-import dto.response.AiDietResponse;
-import dto.response.MetricsResponse;
+import dto.request.*;
+import dto.response.*;
 import entity.DietPlan;
 import entity.User;
 import lombok.RequiredArgsConstructor;
@@ -126,7 +125,7 @@ public class AiDietGenerationService {
                "--- USER DATA ---\n" +
                "Age: " + metrics.getAge() + ", Weight: " + metrics.getWeight() + "kg, Height: " + metrics.getHeight() + "cm.\n" +
                "Gender: " + metrics.getGender() + ", Activity Level: " + metrics.getActivityLevel() + ".\n" +
-               "Dietary Restrictions (CRITICAL): " + metrics.getDietaryRestrictions() + ".\n" +
+               "Dietary Restrictions (CRITICAL): " + metrics.getDietaryRestrictions() + ", Additional Info: " + request.getAllergies() + ".\n" +
                "Meals per day: " + request.getMealsPerDay() + ".\n" +
                "--- DIETETIC GUIDELINES ---\n" +
                rules + "\n" +
