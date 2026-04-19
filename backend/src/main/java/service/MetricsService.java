@@ -1,0 +1,54 @@
+package service;
+
+import dto.request.MetricsRequest;
+import dto.response.MetricsResponse;
+import entity.User;
+import entity.UserMetrics;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import repository.UserMetricsRepository;
+
+@Service
+@RequiredArgsConstructor
+public class MetricsService {
+
+    private final UserMetricsRepository metricsRepository;
+
+    public MetricsResponse saveMetrics(MetricsRequest request, User user) {
+        UserMetrics metrics = UserMetrics.builder()
+                .user(user)
+                .age(request.getAge())
+                .weight(request.getWeight())
+                .height(request.getHeight())
+                .gender(request.getGender())
+                .activityLevel(request.getActivityLevel())
+                .goal(request.getGoal())
+                .dietaryRestrictions(request.getDietaryRestrictions())
+                .injuries(request.getInjuries())
+                .build();
+
+        UserMetrics saved = metricsRepository.save(metrics);
+        return mapToResponse(saved);
+    }
+
+    public MetricsResponse getLatestMetrics(User user) {
+        return metricsRepository.findFirstByUserOrderByRecordedAtDesc(user)
+                .map(this::mapToResponse)
+                .orElseThrow(() -> new RuntimeException("Metrics not found for user"));
+    }
+
+    private MetricsResponse mapToResponse(UserMetrics metrics) {
+        return MetricsResponse.builder()
+                .id(metrics.getId())
+                .age(metrics.getAge())
+                .weight(metrics.getWeight())
+                .height(metrics.getHeight())
+                .gender(metrics.getGender())
+                .activityLevel(metrics.getActivityLevel())
+                .goal(metrics.getGoal())
+                .dietaryRestrictions(metrics.getDietaryRestrictions())
+                .injuries(metrics.getInjuries())
+                .recordedAt(metrics.getRecordedAt())
+                .build();
+    }
+}
