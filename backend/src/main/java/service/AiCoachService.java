@@ -29,8 +29,8 @@ public class AiCoachService {
     public String getCoachResponse(String userMessage, User user) {
         UserMetrics metrics = userMetricsRepository.findFirstByUserOrderByRecordedAtDesc(user).orElse(null);
         
-        String systemPrompt = "Sen 'Antigravity' isimli, profesyonel bir yapay zeka fitness ve beslenme koçusun. " +
-                "Kullanıcıya yardımcı, motive edici ve bilimsel verilere dayanan kısa, öz tavsiyeler ver. " +
+        String systemPrompt = "Sen profesyonel bir yapay zeka fitness ve beslenme koçusun. " +
+                "Kullanıcıya yardımcı, motive edici ve bilimsel verilere dayanan kısa, öz ve anlaşılabilir tavsiyeler ver. " +
                 "Kullanıcı bilgileri: \n" +
                 (metrics != null ? 
                   "- Boy: " + metrics.getHeight() + " cm\n" +
