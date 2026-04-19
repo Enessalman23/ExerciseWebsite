@@ -127,7 +127,7 @@ public class AiGenerationService {
                 "Available Equipment: " + equipmentsStr + ".\n" +
                 "Extra Information (Injuries/Form): " + request.getExtraInformation() + ".\n" +
                 "--- STRUCTURAL RULES ---\n" +
-                "1. Warmup: For each day, provide 3-5 warmup exercises specialized for the muscles being worked that day.\n" +
+                "1. Warmup: DO NOT include warmup exercises. Focus only on the main workout.\n" +
                 "2. Exercise Order: Start with heavy compound movements and move to isolation movements later.\n" +
                 "3. Variety: Do not repeat the same exercise twice in a plan.\n" +
                 "4. Safety: Adjust sets and reps strictly according to the level guidelines provided above.\n" +
@@ -135,7 +135,7 @@ public class AiGenerationService {
                 "ALL textual values like 'dayName' and 'rest' MUST BE IN NATIVE TURKISH. Use terms like '90 saniye dinlenme', '60 saniye'.\n" +
                 "--- JSON OUTPUT FORMAT ---\n" +
                 "ONLY output valid JSON without markdown formatting. Format must be exactly:\n" +
-                "{ \"days\": [ { \"dayName\": \"1. Gün...\", \"warmupExercises\": [ { \"targetMuscle\": \"cardio\", \"exerciseName\": \"İp Atlama\", \"sets\": 1, \"reps\": \"2 dk\", \"rest\": \"0 sn\" } ], \"exercises\": [ { \"targetMuscle\": \"pectorals\", \"sets\": 3, \"reps\": 12, \"rest\": \"90 sn\" } ] } ] }.\n" +
+                "{ \"days\": [ { \"dayName\": \"1. Gün...\", \"exercises\": [ { \"targetMuscle\": \"pectorals\", \"sets\": 3, \"reps\": 12, \"rest\": \"90 sn\" } ] } ] }.\n" +
                 "Valid targetMuscles: [abs, biceps, calves, delts, forearms, glutes, lats, pectorals, spine, triceps, upper back, quadriceps, hamstrings, traps].";
     }
 
@@ -147,10 +147,6 @@ private void enrichWithLocalData(ObjectNode planNode, List<String> availableEqui
             // Enrich regular exercises
             if (dayNode.has("exercises")) {
                 enrichExerciseArray((ArrayNode) dayNode.get("exercises"), availableEquipments, random);
-            }
-            // Enrich warmup exercises
-            if (dayNode.has("warmupExercises")) {
-                enrichExerciseArray((ArrayNode) dayNode.get("warmupExercises"), availableEquipments, random);
             }
         }
     }

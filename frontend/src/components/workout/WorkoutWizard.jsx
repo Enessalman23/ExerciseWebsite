@@ -9,7 +9,6 @@ const LoadingOverlay = ({ isVisible }) => {
   const messages = [
     "Yapay Zeka hedeflerinizi analiz ediyor...",
     "Kas grupları için en iyi egzersizler seçiliyor...",
-    "Isınma hareketleri planlanıyor...",
     "Size özel set ve tekrar sayıları belirleniyor...",
     "Programınız optimize ediliyor, az kaldı!"
   ];
@@ -296,7 +295,7 @@ const WorkoutWizard = ({
                  </div>
                  
                  <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-                    <p>Antrenman yaparken vücudunuzu dinleyin. Keskin bir ağrı veya baş dönmesi hissederseniz hemen durun. Isınma hareketlerini atlamayın.</p>
+                    <p>Antrenman yaparken vücudunuzu dinleyin. Keskin bir ağrı veya baş dönmesi hissederseniz hemen durun.</p>
                     <p style={{ fontWeight: 700, color: 'var(--text-main)', marginTop: '12px' }}>
                       * Bu yapay zeka tarafından oluşturulan bir rehberdir. Egzersizlerin uygulanması sırasında oluşabilecek sakatlık veya sağlık problemlerinden platformumuz ve geliştiricilerimiz sorumlu tutulamaz.
                     </p>

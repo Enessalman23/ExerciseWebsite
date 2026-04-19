@@ -9,10 +9,9 @@ const WorkoutCard = ({
   expandedPlan, 
   setExpandedPlan, 
   setActiveSession, 
-  handleDeleteWorkout,
-  parseWorkoutJson
+  handleDeleteWorkout
 }) => {
-  const planData = parseWorkoutJson(item.workoutPlanJson);
+  const planData = JSON.parse(item.workoutPlanJson);
   const isExpanded = expandedPlan === item.workoutPlanId;
   const isCorrupted = planData === "CORRUPTED";
   
@@ -33,7 +32,7 @@ const WorkoutCard = ({
                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
                   <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{new Date().toLocaleDateString('tr-TR')}</span>
                </div>
-               <h3 style={{ fontSize: '1.4rem', margin: '0 0 10px 0' }}>{item.planName || "AI Özel Program"}</h3>
+               <h3 style={{ fontSize: '1.4rem', margin: '0 0 10px 0' }}>{item.planName}</h3>
                <div style={{ display: 'flex', gap: '12px' }}>
                   <div className="workout-badge workout-badge-secondary">
                     <Calendar size={14} style={{ marginRight: '4px' }} /> {planData?.days?.length || 0} GÜN

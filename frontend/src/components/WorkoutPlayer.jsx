@@ -7,7 +7,7 @@ import {
 
 const WorkoutPlayer = ({ plan, onClose }) => {
   const [currentDayIdx, setCurrentDayIdx] = useState(0);
-  const [currentStep, setCurrentStep] = useState('warmup'); // 'warmup', 'exercise', 'rest', 'finished'
+  const [currentStep, setCurrentStep] = useState('exercise'); // 'warmup', 'exercise', 'rest', 'finished'
   const [exerciseIdx, setExerciseIdx] = useState(0);
   const [warmupIdx, setWarmupIdx] = useState(0);
   const [restTimer, setRestTimer] = useState(0);
