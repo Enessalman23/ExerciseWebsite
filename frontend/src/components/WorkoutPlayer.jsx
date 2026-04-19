@@ -184,7 +184,7 @@ const WorkoutPlayer = ({ plan, onClose }) => {
                    {currentStep === 'warmup' ? <Zap size={16} /> : <Dumbbell size={16} />}
                    {currentStep === 'warmup' ? 'ISINMA' : 'ANA ANTRENMAN'}
                 </div>
-                <h2 style={{ fontSize: '3rem', margin: 0, fontWeight: 800 }}>{currentExercise?.exerciseName || (currentStep === 'warmup' ? "Isınma Hareketi" : "Egzersiz")}</h2>
+                <h2 style={{ fontSize: '3rem', margin: 0, fontWeight: 800, color: '#fff', textTransform: 'capitalize' }}>{currentExercise?.exerciseName || (currentStep === 'warmup' ? "Isınma Hareketi" : "Egzersiz")}</h2>
                 <div style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
                   <span style={{ fontSize: '1.2rem', color: currentStep === 'warmup' ? 'var(--secondary)' : 'var(--primary)', fontWeight: 600 }}>{currentExercise?.targetMuscle?.toUpperCase()}</span>
                   <span style={{ opacity: 0.3 }}>|</span>
