@@ -111,24 +111,33 @@ public class AiDietGenerationService {
     }
 
     private String buildPrompt(AiDietRequest request, MetricsResponse metrics) {
-        return "You are a clinical dietitian and sports nutritionist. Create a strictly formatted JSON diet plan in Turkish language. \n" +
-               "--- USER METRICS ---\n" +
+        String goalText = metrics.getGoal();
+        String rules = "";
+        
+        if ("FAT_LOSS".equalsIgnoreCase(goalText)) {
+            rules = "Goal: WEIGHT LOSS. Calories: Calculate TDEE and subtract 500. Macros: 2.2g Protein/kg, 0.7g Fat/kg, rest Carbs.";
+        } else if ("HYPERTROPHY".equalsIgnoreCase(goalText) || "STRENGTH".equalsIgnoreCase(goalText)) {
+            rules = "Goal: MUSCLE GAIN / BULK. Calories: Calculate TDEE and add 400-500. Macros: 1.8g Protein/kg, 0.9g Fat/kg, rest Carbs.";
+        } else {
+            rules = "Goal: MAINTENANCE / HEALTH. Calories: Use TDEE. Macros: 1.6g Protein/kg, 0.8g Fat/kg, rest Carbs.";
+        }
+
+        return "You are a world-class clinical dietitian and sports nutritionist. Create a strictly formatted JSON diet plan in Turkish language. \n" +
+               "--- USER DATA ---\n" +
                "Age: " + metrics.getAge() + ", Weight: " + metrics.getWeight() + "kg, Height: " + metrics.getHeight() + "cm.\n" +
-               "Gender: " + metrics.getGender() + ", Activity Level: " + metrics.getActivityLevel() + ", Goal: " + metrics.getGoal() + ".\n" +
-               "Restrictions: " + metrics.getDietaryRestrictions() + ". Meals/day: " + request.getMealsPerDay() + ".\n" +
-               "--- DIETETIC RULES ---\n" +
-               "1. Calories: Use Harris-Benedict + Activity Multiplier. For 'Kilo Verme' subtract 500. For 'Kilo Alma' add 500.\n" +
-               "2. Macros (g/kg):\n" +
-               "   - Kilo Verme: 2.2g Protein/kg, 0.7g Fat/kg, rest Carbs.\n" +
-               "   - Kilo Alma: 1.8g Protein/kg, 0.9g Fat/kg, rest Carbs.\n" +
-               "3. Water Intake: Calculate daily water in Liters (Weight * 0.035). Include it in the response.\n" +
-               "--- CONTENT & LOCALIZATION ---\n" +
-               "1. Use ONLY native Turkish foods (e.g., Lor peyniri, Zeytinyağı, Mevsim salatası, Mercimek, Bulgur). NO Greek Yogurt or exotic berries.\n" +
-               "2. IF/2-Meal Rule: If 2 meals are requested, name them '1. Öğün (Kırılış)' and '2. Öğün (Kapanış)'.\n" +
-               "3. Variety: Do not repeat the same main protein source in more than 2 meals.\n" +
+               "Gender: " + metrics.getGender() + ", Activity Level: " + metrics.getActivityLevel() + ".\n" +
+               "Dietary Restrictions (CRITICAL): " + metrics.getDietaryRestrictions() + ".\n" +
+               "Meals per day: " + request.getMealsPerDay() + ".\n" +
+               "--- DIETETIC GUIDELINES ---\n" +
+               rules + "\n" +
+               "Water Intake: Calculate Weight * 0.035 in Liters.\n" +
+               "--- CONTENT RULES ---\n" +
+               "1. CRITICAL: If any 'Dietary Restrictions' are provided, YOU MUST NOT INCLUDE those ingredients. (e.g. if allergy to eggs, NO EGGS).\n" +
+               "2. Localization: Use native Turkish foods (Lor, Zeytinyağı, Mercimek, Bulgur, Mevsim sebzeleri). No exotic ingredients.\n" +
+               "3. IF/2-Meal Rule: If 2 meals are requested, name them '1. Öğün (Kırılış)' and '2. Öğün (Kapanış)'.\n" +
                "--- JSON OUTPUT FORMAT ---\n" +
-               "ONLY output valid JSON without markdown formatting. Example:\n" +
+               "ONLY output valid JSON. No markdown. No comments. Example structure:\n" +
                "{ \"targetDailyCalories\": 2400, \"targetProtein\": 160, \"targetCarbs\": 250, \"targetFats\": 80, \"waterIntakeL\": 2.8, " +
-               "\"meals\": [ { \"mealName\": \"Kahvaltı\", \"totalCalories\": 600, \"prepTip\": \"Yumurtaları 7 dakika haşlayın, peynire zeytinyağı ekleyin.\", \"items\": [ \"2 adet haşlanmış yumurta\", \"30g lor peyniri\" ] } ] }";
+               "\"meals\": [ { \"mealName\": \"Kahvaltı\", \"totalCalories\": 600, \"prepTip\": \"...\", \"items\": [ \"...\", \"...\" ] } ] }";
     }
 }
