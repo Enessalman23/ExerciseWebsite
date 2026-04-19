@@ -67,39 +67,50 @@ public class AiGenerationService {
                 )
         );
 
-        try {
-            HttpEntity<Map<String, Object>> httpEntity = new HttpEntity<>(body, headers);
-            String responseStr = restTemplate.postForObject(geminiEndpoint, httpEntity, String.class);
-            JsonNode root = objectMapper.readTree(responseStr);
-            String aiText = root.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
+        int maxRetries = 3;
+        int retryCount = 0;
+        Exception lastException = null;
 
-            // Robust JSON extraction: Find the first '{' and the last '}'
-            int firstBrace = aiText.indexOf('{');
-            int lastBrace = aiText.lastIndexOf('}');
+        while (retryCount < maxRetries) {
+            try {
+                HttpEntity<Map<String, Object>> httpEntity = new HttpEntity<>(body, headers);
+                String responseStr = restTemplate.postForObject(geminiEndpoint, httpEntity, String.class);
+                JsonNode root = objectMapper.readTree(responseStr);
+                String aiText = root.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
 
-            if (firstBrace == -1 || lastBrace == -1 || lastBrace < firstBrace) {
-                System.err.println("CRITICAL: No valid JSON found in AI response: " + aiText);
-                throw new RuntimeException("AI response does not contain valid JSON.");
+                // Robust JSON extraction: Find the first '{' and the last '}'
+                int firstBrace = aiText.indexOf('{');
+                int lastBrace = aiText.lastIndexOf('}');
+
+                if (firstBrace == -1 || lastBrace == -1 || lastBrace < firstBrace) {
+                    System.err.println("CRITICAL: No valid JSON found in AI response: " + aiText);
+                    throw new RuntimeException("AI response does not contain valid JSON.");
+                }
+
+                String cleanedJson = aiText.substring(firstBrace, lastBrace + 1);
+
+                JsonNode generatedPlan = objectMapper.readTree(cleanedJson);
+                enrichWithLocalData((ObjectNode) generatedPlan, request.getEquipments());
+
+                WorkoutPlan plan = new WorkoutPlan();
+                plan.setUser(user);
+                plan.setGeneratedPlanJson(objectMapper.writeValueAsString(generatedPlan));
+                plan.setPlanName(request.getPlanName());
+                plan.setActive(true);
+                plan = workoutPlanRepository.save(plan);
+
+                return new AiWorkoutResponse(plan.getId(), plan.getGeneratedPlanJson(), "Workout created successfully!", plan.getPlanName());
+
+            } catch (Exception e) {
+                lastException = e;
+                retryCount++;
+                System.err.println("AI Workout attempt " + retryCount + " failed: " + e.getMessage());
+                if (retryCount < maxRetries) {
+                    try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
+                }
             }
-
-            String cleanedJson = aiText.substring(firstBrace, lastBrace + 1);
-
-            JsonNode generatedPlan = objectMapper.readTree(cleanedJson);
-            enrichWithLocalData((ObjectNode) generatedPlan, request.getEquipments());
-
-            WorkoutPlan plan = new WorkoutPlan();
-            plan.setUser(user);
-            plan.setGeneratedPlanJson(objectMapper.writeValueAsString(generatedPlan));
-            plan.setPlanName(request.getPlanName());
-            plan.setActive(true);
-            plan = workoutPlanRepository.save(plan);
-
-            return new AiWorkoutResponse(plan.getId(), plan.getGeneratedPlanJson(), "Workout created successfully!", plan.getPlanName());
-
-        } catch (Exception e) {
-            System.err.println("AI Processing Failed. Error: " + e.getMessage());
-            throw new RuntimeException("Failed to process AI plan: " + e.getMessage(), e);
         }
+        throw new RuntimeException("Failed to process AI workout plan after " + maxRetries + " attempts. Last error: " + lastException.getMessage(), lastException);
     }
     private String buildPrompt(AiWorkoutRequest request) {
         String genderStr = request.getGender() != null ? request.getGender() : "Belirtilmemiş";

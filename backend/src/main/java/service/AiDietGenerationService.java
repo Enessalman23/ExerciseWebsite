@@ -49,53 +49,65 @@ public class AiDietGenerationService {
             )
         );
 
-        try {
-            HttpEntity<Map<String, Object>> httpEntity = new HttpEntity<>(body, headers);
-            String responseStr = restTemplate.postForObject(geminiEndpoint, httpEntity, String.class);
-            JsonNode root = objectMapper.readTree(responseStr);
-            String aiText = root.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
+        int maxRetries = 3;
+        int retryCount = 0;
+        Exception lastException = null;
 
-            aiText = aiText.replaceAll("(?s)```json(.*?)```", "$1").trim();
-            aiText = aiText.replaceAll("(?s)```(.*?)```", "$1").trim();
+        while (retryCount < maxRetries) {
+            try {
+                HttpEntity<Map<String, Object>> httpEntity = new HttpEntity<>(body, headers);
+                String responseStr = restTemplate.postForObject(geminiEndpoint, httpEntity, String.class);
+                JsonNode root = objectMapper.readTree(responseStr);
+                String aiText = root.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
 
-            JsonNode generatedPlan = objectMapper.readTree(aiText);
-            
-            int targetDailyCalories = generatedPlan.path("targetDailyCalories").asInt(0);
-            int targetProtein = generatedPlan.path("targetProtein").asInt(0);
-            int targetCarbs = generatedPlan.path("targetCarbs").asInt(0);
-            int targetFats = generatedPlan.path("targetFats").asInt(0);
+                aiText = aiText.replaceAll("(?s)```json(.*?)```", "$1").trim();
+                aiText = aiText.replaceAll("(?s)```(.*?)```", "$1").trim();
 
-            DietPlan plan = new DietPlan();
-            plan.setUser(user);
-            plan.setGeneratedPlanJson(objectMapper.writeValueAsString(generatedPlan));
-            plan.setTargetDailyCalories(targetDailyCalories);
-            plan.setTargetProtein(targetProtein);
-            plan.setTargetCarbs(targetCarbs);
-            plan.setTargetFats(targetFats);
-            plan.setActive(true);
-            
-            String assignedName = (request.getPlanName() != null && !request.getPlanName().trim().isEmpty()) 
-                                    ? request.getPlanName() 
-                                    : "Yeni Diyet Programı";
-            plan.setPlanName(assignedName);
-            
-            plan = dietPlanRepository.save(plan);
+                JsonNode generatedPlan = objectMapper.readTree(aiText);
+                
+                int targetDailyCalories = generatedPlan.path("targetDailyCalories").asInt(0);
+                int targetProtein = generatedPlan.path("targetProtein").asInt(0);
+                int targetCarbs = generatedPlan.path("targetCarbs").asInt(0);
+                int targetFats = generatedPlan.path("targetFats").asInt(0);
 
-            return AiDietResponse.builder()
-                    .dietPlanId(plan.getId())
-                    .planName(plan.getPlanName())
-                    .generatedPlanJson(plan.getGeneratedPlanJson())
-                    .targetDailyCalories(plan.getTargetDailyCalories())
-                    .targetProtein(plan.getTargetProtein())
-                    .targetCarbs(plan.getTargetCarbs())
-                    .targetFats(plan.getTargetFats())
-                    .createdAt(plan.getCreatedAt())
-                    .message("Diet plan generated successfully!")
-                    .build();
+                DietPlan plan = new DietPlan();
+                plan.setUser(user);
+                plan.setGeneratedPlanJson(objectMapper.writeValueAsString(generatedPlan));
+                plan.setTargetDailyCalories(targetDailyCalories);
+                plan.setTargetProtein(targetProtein);
+                plan.setTargetCarbs(targetCarbs);
+                plan.setTargetFats(targetFats);
+                plan.setActive(true);
+                
+                String assignedName = (request.getPlanName() != null && !request.getPlanName().trim().isEmpty()) 
+                                        ? request.getPlanName() 
+                                        : "Yeni Diyet Programı";
+                plan.setPlanName(assignedName);
+                
+                plan = dietPlanRepository.save(plan);
 
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to process AI diet plan: " + e.getMessage(), e);
+                return AiDietResponse.builder()
+                        .dietPlanId(plan.getId())
+                        .planName(plan.getPlanName())
+                        .generatedPlanJson(plan.getGeneratedPlanJson())
+                        .targetDailyCalories(plan.getTargetDailyCalories())
+                        .targetProtein(plan.getTargetProtein())
+                        .targetCarbs(plan.getTargetCarbs())
+                        .targetFats(plan.getTargetFats())
+                        .createdAt(plan.getCreatedAt())
+                        .message("Diet plan generated successfully!")
+                        .build();
+
+            } catch (Exception e) {
+                lastException = e;
+                retryCount++;
+                System.err.println("AI Diet attempt " + retryCount + " failed: " + e.getMessage());
+                if (retryCount < maxRetries) {
+                    try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
+                }
+            }
         }
+        throw new RuntimeException("Failed to process AI diet plan after " + maxRetries + " attempts. Last error: " + lastException.getMessage(), lastException);
     }
 
     private String buildPrompt(AiDietRequest request, MetricsResponse metrics) {
