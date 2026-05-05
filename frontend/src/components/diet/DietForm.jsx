@@ -27,6 +27,15 @@ const DietForm = ({
           <label className="input-label">Program İsmi (Örn: Definasyon, Yaz Hazırlığı)</label>
           <input type="text" name="planName" className="input-field" placeholder="Diyetinize bir isim verin..." value={formData.planName} onChange={handleChange} required />
         </div>
+
+        <div className="input-group">
+          <label className="input-label">Diyet Hedefi</label>
+          <select name="goal" className="input-field" value={formData.goal} onChange={handleChange}>
+              <option value="FAT_LOSS">Kilo Verme (Yağ Yakımı)</option>
+              <option value="HYPERTROPHY">Kilo Alma (Kas Geliştirme)</option>
+              <option value="MAINTENANCE">Kiloyu Koruma</option>
+          </select>
+        </div>
         
         <div className="input-group">
           <label className="input-label">Günlük Öğün Sayısı</label>

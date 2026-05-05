@@ -4,5 +4,6 @@ public enum Goal {
     HYPERTROPHY, // Kas geliştirme
     FAT_LOSS,    // Yağ yakımı
     STRENGTH,    // Kuvvet artışı
-    ENDURANCE    // Dayanıklılık
+    ENDURANCE,   // Dayanıklılık
+    MAINTENANCE  // Kilo koruma
 }

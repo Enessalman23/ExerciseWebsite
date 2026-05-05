@@ -1,14 +1,13 @@
 package controller;
 
+import config.CurrentUser;
 import dto.request.MetricsRequest;
 import dto.response.MetricsResponse;
 import entity.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import repository.UserRepository;
 import service.MetricsService;
 
 @RestController
@@ -17,26 +16,18 @@ import service.MetricsService;
 public class MetricsController {
 
     private final MetricsService metricsService;
-    private final UserRepository userRepository;
 
     @PostMapping
     public ResponseEntity<MetricsResponse> saveMetrics(
             @Valid @RequestBody MetricsRequest request,
-            Authentication authentication) {
-
-        String username = authentication.getName();
-        User user = userRepository.findFirstByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+            @CurrentUser User user) {
 
         MetricsResponse response = metricsService.saveMetrics(request, user);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping
-    public ResponseEntity<MetricsResponse> getLatestMetrics(Authentication authentication) {
-        String username = authentication.getName();
-        User user = userRepository.findFirstByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+    public ResponseEntity<MetricsResponse> getLatestMetrics(@CurrentUser User user) {
 
         MetricsResponse response = metricsService.getLatestMetrics(user);
         return ResponseEntity.ok(response);

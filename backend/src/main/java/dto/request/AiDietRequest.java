@@ -19,4 +19,7 @@ public class AiDietRequest {
 
     @Schema(description = "Planın ismi", example = "Yazlık Diyet")
     private String planName;
+
+    @Schema(description = "Diyet hedefi", example = "FAT_LOSS")
+    private String goal;
 }

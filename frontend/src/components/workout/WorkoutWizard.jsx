@@ -89,7 +89,7 @@ const WorkoutWizard = ({
        <LoadingOverlay isVisible={generationLoading} />
        
        <div style={{ position: 'absolute', top: '32px', right: '32px' }}>
-          <Brain size={32} color="var(--primary)" className="animate-pulse" />
+          {/* <Brain size={32} color="var(--primary)" className="animate-pulse" /> */}
        </div>
        
        {/* Progress Bar */}

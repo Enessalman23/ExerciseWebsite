@@ -3,6 +3,7 @@ package entity;
 import enums.ActivityLevel;
 import enums.Gender;
 import enums.Goal;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,7 +25,7 @@ public class UserMetrics {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // FetchType.LAZY performansı artırır, sadece ihtiyaç olduğunda User'ı çeker.
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -46,7 +47,6 @@ public class UserMetrics {
     @Enumerated(EnumType.STRING)
     private Goal goal;
 
-    // Vegan, Glütensiz vb. diyet kısıtlamaları veya menisküs gibi sakatlıklar
     @Column(columnDefinition = "TEXT")
     private String dietaryRestrictions;
 

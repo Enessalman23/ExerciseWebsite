@@ -1,5 +1,6 @@
 package controller;
 
+import config.CurrentUser;
 import dto.request.AiDietRequest;
 import dto.response.AiDietResponse;
 import entity.DietPlan;
@@ -7,7 +8,6 @@ import entity.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,28 +26,19 @@ import java.util.stream.Collectors;
 public class DietController {
 
     private final AiDietGenerationService aiDietGenerationService;
-    private final UserRepository userRepository;
     private final DietPlanRepository dietPlanRepository;
 
     @PostMapping("/generate-plan")
     public ResponseEntity<AiDietResponse> generateDietPlan(
             @Valid @RequestBody AiDietRequest request,
-            Authentication authentication) {
-
-        String username = authentication.getName();
-        User user = userRepository.findFirstByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+            @CurrentUser User user) {
 
         AiDietResponse response = aiDietGenerationService.generateDiet(request, user);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/my-plans")
-    public ResponseEntity<List<AiDietResponse>> getDietHistory(Authentication authentication) {
-        String username = authentication.getName();
-        User user = userRepository.findFirstByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found: " + username));
-
+    public ResponseEntity<List<AiDietResponse>> getDietHistory(@CurrentUser User user) {
         List<DietPlan> plans = dietPlanRepository.findByUserOrderByCreatedAtDesc(user);
 
         List<AiDietResponse> response = plans.stream()
@@ -68,19 +59,15 @@ public class DietController {
     }
     
     @org.springframework.web.bind.annotation.DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteDietPlan(@org.springframework.web.bind.annotation.PathVariable Long id, Authentication authentication) {
-        String username = authentication.getName();
-        User user = userRepository.findFirstByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found: " + username));
-                
-        DietPlan plan = dietPlanRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Diet Plan not found"));
-                
-        if (!plan.getUser().getId().equals(user.getId())) {
-             return ResponseEntity.status(403).body("You don't have permission to delete this plan");
-        }
-        
-        dietPlanRepository.delete(plan);
-        return ResponseEntity.ok("Deleted successfully");
+    public ResponseEntity<String> deleteDietPlan(@org.springframework.web.bind.annotation.PathVariable Long id, @CurrentUser User user) {
+        return dietPlanRepository.findById(id)
+                .map(plan -> {
+                    if (!plan.getUser().getId().equals(user.getId())) {
+                        return ResponseEntity.status(403).body("You don't have permission to delete this plan");
+                    }
+                    dietPlanRepository.delete(plan);
+                    return ResponseEntity.ok("Deleted successfully");
+                })
+                .orElse(ResponseEntity.status(404).body("Diet Plan not found"));
     }
 }

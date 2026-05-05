@@ -1,13 +1,12 @@
 package controller;
 
+import config.CurrentUser;
 import entity.MealLog;
 import entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import repository.MealLogRepository;
-import repository.UserRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -21,13 +20,9 @@ import java.util.Map;
 public class MealLogController {
 
     private final MealLogRepository mealLogRepository;
-    private final UserRepository userRepository;
 
     @GetMapping
-    public ResponseEntity<List<MealLog>> getTodayMeals(Authentication authentication) {
-        String username = authentication.getName();
-        User user = userRepository.findFirstByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public ResponseEntity<List<MealLog>> getTodayMeals(@CurrentUser User user) {
 
         LocalDateTime startOfDay = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
         LocalDateTime endOfDay = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
@@ -36,42 +31,42 @@ public class MealLogController {
     }
 
     @GetMapping("/history")
-    public ResponseEntity<List<Map<String, Object>>> getMealHistory(Authentication authentication) {
-        String username = authentication.getName();
-        User user = userRepository.findFirstByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public ResponseEntity<List<Map<String, Object>>> getMealHistory(@CurrentUser User user) {
 
-        LocalDateTime sevenDaysAgo = LocalDateTime.of(LocalDate.now().minusDays(7), LocalTime.MIN);
-        List<MealLog> allRecentMeals = mealLogRepository.findByUserAndDateRange(user, sevenDaysAgo, LocalDateTime.now());
-
-        // Group by date
+        // Get exactly last 7 days (including today)
+        LocalDate today = LocalDate.now();
         Map<LocalDate, Integer> dailyCalories = new java.util.TreeMap<>();
-        // Initialize last 7 days with 0
-        for (int i = 0; i <= 7; i++) {
-            dailyCalories.put(LocalDate.now().minusDays(i), 0);
+        
+        // Initialize exactly last 7 days with 0 (from today-6 to today)
+        for (int i = 0; i < 7; i++) {
+            dailyCalories.put(today.minusDays(i), 0);
         }
+
+        // Fetch meals from today-6 until now
+        LocalDateTime startRange = LocalDateTime.of(today.minusDays(6), LocalTime.MIN);
+        List<MealLog> allRecentMeals = mealLogRepository.findByUserAndDateRange(user, startRange, LocalDateTime.now());
 
         for (MealLog meal : allRecentMeals) {
             LocalDate date = meal.getCreatedAt().toLocalDate();
-            dailyCalories.put(date, dailyCalories.getOrDefault(date, 0) + meal.getCalories());
+            if (dailyCalories.containsKey(date)) {
+                dailyCalories.put(date, dailyCalories.get(date) + meal.getCalories());
+            }
         }
 
         List<Map<String, Object>> result = new java.util.ArrayList<>();
-        dailyCalories.forEach((date, calories) -> {
+        // TreeMap.keySet() is sorted, so we get ascending order
+        for (LocalDate date : dailyCalories.keySet()) {
             Map<String, Object> entry = new java.util.HashMap<>();
-            entry.put("date", date.toString());
-            entry.put("calories", calories);
+            entry.put("date", date.toString()); // YYYY-MM-DD
+            entry.put("calories", dailyCalories.get(date));
             result.add(entry);
-        });
+        }
 
         return ResponseEntity.ok(result);
     }
 
     @PostMapping
-    public ResponseEntity<?> addMeal(@RequestBody Map<String, Object> request, Authentication authentication) {
-        String username = authentication.getName();
-        User user = userRepository.findFirstByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public ResponseEntity<?> addMeal(@RequestBody Map<String, Object> request, @CurrentUser User user) {
 
         try {
             String foodName = (String) request.get("foodName");
@@ -109,19 +104,15 @@ public class MealLogController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteMeal(@PathVariable Long id, Authentication authentication) {
-        String username = authentication.getName();
-        User user = userRepository.findFirstByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        MealLog meal = mealLogRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Meal not found"));
-
-        if (!meal.getUser().getId().equals(user.getId())) {
-            return ResponseEntity.status(403).body("Unauthorized");
-        }
-
-        mealLogRepository.delete(meal);
-        return ResponseEntity.ok("Deleted");
+    public ResponseEntity<?> deleteMeal(@PathVariable Long id, @CurrentUser User user) {
+        return mealLogRepository.findById(id)
+                .map(meal -> {
+                    if (!meal.getUser().getId().equals(user.getId())) {
+                        return ResponseEntity.status(403).body("Unauthorized");
+                    }
+                    mealLogRepository.delete(meal);
+                    return ResponseEntity.ok("Deleted");
+                })
+                .orElse(ResponseEntity.status(404).body("Meal not found"));
     }
 }

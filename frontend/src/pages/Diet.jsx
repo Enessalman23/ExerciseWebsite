@@ -4,6 +4,7 @@ import axiosClient from '../api/axiosClient';
 import { useToast } from '../context/ToastContext';
 import { Apple, Plus } from 'lucide-react';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { safeParseJson } from '../utils/jsonUtils';
 
 // New Sub-components
 import DietForm from '../components/diet/DietForm';
@@ -19,7 +20,8 @@ const Diet = () => {
   const [formData, setFormData] = useState({
     planName: '',
     mealsPerDay: 3,
-    allergies: ''
+    allergies: '',
+    goal: 'FAT_LOSS'
   });
   const [generationLoading, setGenerationLoading] = useState(false);
   const [expandedPlan, setExpandedPlan] = useState(null);
@@ -49,7 +51,7 @@ const Diet = () => {
     try {
       await axiosClient.post('/api/diet/generate-plan', formData);
       setShowForm(false);
-      setFormData({ planName: '', mealsPerDay: 3, allergies: '' });
+      setFormData({ planName: '', mealsPerDay: 3, allergies: '', goal: 'FAT_LOSS' });
       showToast("Özel beslenme planınız başarıyla oluşturuldu!", "success");
       fetchHistory();
     } catch (err) {
@@ -78,13 +80,7 @@ const Diet = () => {
     }
   };
 
-  const parseDietJson = (jsonString) => {
-    try {
-      return JSON.parse(jsonString);
-    } catch (e) {
-      return null;
-    }
-  };
+
 
   return (
     <div className="container" style={{ paddingTop: '40px', paddingBottom: '40px', maxWidth: '1200px' }}>
@@ -124,7 +120,7 @@ const Diet = () => {
         setExpandedPlan={setExpandedPlan}
         handleDeletePlan={handleDeletePlan}
         setSelectedMeal={setSelectedMeal}
-        parseDietJson={parseDietJson}
+        parseDietJson={safeParseJson}
       />
 
       <DietMealModal 

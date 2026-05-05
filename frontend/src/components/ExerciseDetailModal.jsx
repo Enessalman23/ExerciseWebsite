@@ -1,8 +1,31 @@
-import React from 'react';
-import { X, Info, Target, Dumbbell, ListOrdered } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Info, Target, Dumbbell, ListOrdered, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const ExerciseDetailModal = ({ exercise, onClose }) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  const images = exercise?.images || [];
+  const hasMultipleImages = images.length > 1;
+
+  useEffect(() => {
+    if (hasMultipleImages) {
+      const interval = setInterval(() => {
+        setCurrentImageIndex(prev => (prev + 1) % images.length);
+      }, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [hasMultipleImages, images.length]);
+
   if (!exercise) return null;
+
+  const getImageUrl = (path) => {
+    if (!path) return '';
+    // If it's a new dataset path (doesn't contain gifs_360x360)
+    if (!path.includes('gifs_360x360')) {
+        return `http://localhost:8080/exercise-images/${path}`;
+    }
+    return `http://localhost:8080/gifs/gifs_360x360/${path}`;
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -21,22 +44,42 @@ const ExerciseDetailModal = ({ exercise, onClose }) => {
         <div style={{ 
           width: '100%', 
           height: '350px', 
-          background: '#000', 
+          background: '#fff', 
           position: 'relative',
           display: 'flex',
           justifyContent: 'center',
-          alignItems: 'center'
+          alignItems: 'center',
+          borderBottom: '1px solid var(--border-color)'
         }}>
-          {exercise.gifUrl ? (
+          {images.length > 0 || exercise.gifUrl ? (
             <img 
-              src={`http://localhost:8080/gifs/gifs_360x360/${exercise.gifUrl}`} 
+              src={images.length > 0 ? getImageUrl(images[currentImageIndex]) : getImageUrl(exercise.gifUrl)} 
               alt={exercise.name}
-              style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
+              style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain', padding: '20px' }}
             />
           ) : (
             <Dumbbell size={80} color="var(--primary)" style={{ opacity: 0.2 }} />
           )}
           
+          {hasMultipleImages && (
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '20px', 
+              display: 'flex', 
+              gap: '8px' 
+            }}>
+              {images.map((_, idx) => (
+                <div key={idx} style={{ 
+                  width: '8px', 
+                  height: '8px', 
+                  borderRadius: '50%', 
+                  background: idx === currentImageIndex ? 'var(--primary)' : 'rgba(0,0,0,0.1)',
+                  transition: 'all 0.3s'
+                }} />
+              ))}
+            </div>
+          )}
+
           <button 
             onClick={onClose}
             style={{ 
@@ -50,10 +93,11 @@ const ExerciseDetailModal = ({ exercise, onClose }) => {
               height: '40px', 
               borderRadius: '50%', 
               cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
+              display: 'flex', 
+              alignItems: 'center', 
               justifyContent: 'center',
-              backdropFilter: 'blur(10px)'
+              backdropFilter: 'blur(10px)',
+              zIndex: 10
             }}
           >
             <X size={24} />
@@ -82,7 +126,7 @@ const ExerciseDetailModal = ({ exercise, onClose }) => {
                 <ListOrdered size={20} color="var(--primary)" /> Adım Adım Uygulama
               </h3>
               
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '400px', overflowY: 'auto', paddingRight: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '300px', overflowY: 'auto', paddingRight: '10px' }}>
                 {exercise.instructions && exercise.instructions.length > 0 ? (
                   exercise.instructions.map((step, idx) => (
                     <div key={idx} style={{ 

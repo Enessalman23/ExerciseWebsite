@@ -1,6 +1,5 @@
 package service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -10,17 +9,10 @@ import dto.request.AiWorkoutRequest;
 import dto.response.AiWorkoutResponse;
 import entity.User;
 import entity.WorkoutPlan;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import repository.WorkoutPlanRepository;
 
-import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -28,89 +20,32 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AiGenerationService {
 
-    @Value("${gemini.api.key}")
-    private String geminiApiKey;
-
+    private final GeminiClientService geminiClientService;
+    private final ExerciseService exerciseService;
     private final WorkoutPlanRepository workoutPlanRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private List<ExerciseDataDto> exercises = new ArrayList<>();
-
-    @PostConstruct
-    public void init() {
-        try {
-            File jsonFile = new File("exercisedb_v1_sample/exercises.json");
-            if (jsonFile.exists()) {
-                exercises = objectMapper.readValue(jsonFile, new TypeReference<List<ExerciseDataDto>>() {});
-                System.out.println("Loaded " + exercises.size() + " exercises from JSON.");
-            } else {
-                System.out.println("Could not find exercises.json at " + jsonFile.getAbsolutePath());
-            }
-        } catch (Exception e) {
-            System.err.println("Failed to load exercises.json: " + e.getMessage());
-        }
-    }
 
     public AiWorkoutResponse generateWorkout(AiWorkoutRequest request, User user) {
         String prompt = buildPrompt(request);
 
-        String geminiEndpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + geminiApiKey;
-        RestTemplate restTemplate = new RestTemplate();
+        try {
+            String jsonContent = geminiClientService.generateContent(prompt, 3, true);
+            JsonNode generatedPlan = objectMapper.readTree(jsonContent);
+            
+            enrichWithLocalData((ObjectNode) generatedPlan, request.getEquipments());
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+            WorkoutPlan plan = new WorkoutPlan();
+            plan.setUser(user);
+            plan.setGeneratedPlanJson(objectMapper.writeValueAsString(generatedPlan));
+            plan.setPlanName(request.getPlanName());
+            plan.setActive(true);
+            plan = workoutPlanRepository.save(plan);
 
-        Map<String, Object> body = Map.of(
-                "contents", List.of(
-                        Map.of("parts", List.of(
-                                Map.of("text", prompt)
-                        ))
-                )
-        );
+            return new AiWorkoutResponse(plan.getId(), plan.getGeneratedPlanJson(), "Workout created successfully!", plan.getPlanName());
 
-        int maxRetries = 3;
-        int retryCount = 0;
-        Exception lastException = null;
-
-        while (retryCount < maxRetries) {
-            try {
-                HttpEntity<Map<String, Object>> httpEntity = new HttpEntity<>(body, headers);
-                String responseStr = restTemplate.postForObject(geminiEndpoint, httpEntity, String.class);
-                JsonNode root = objectMapper.readTree(responseStr);
-                String aiText = root.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
-
-                // Robust JSON extraction: Find the first '{' and the last '}'
-                int firstBrace = aiText.indexOf('{');
-                int lastBrace = aiText.lastIndexOf('}');
-
-                if (firstBrace == -1 || lastBrace == -1 || lastBrace < firstBrace) {
-                    System.err.println("CRITICAL: No valid JSON found in AI response: " + aiText);
-                    throw new RuntimeException("AI response does not contain valid JSON.");
-                }
-
-                String cleanedJson = aiText.substring(firstBrace, lastBrace + 1);
-
-                JsonNode generatedPlan = objectMapper.readTree(cleanedJson);
-                enrichWithLocalData((ObjectNode) generatedPlan, request.getEquipments());
-
-                WorkoutPlan plan = new WorkoutPlan();
-                plan.setUser(user);
-                plan.setGeneratedPlanJson(objectMapper.writeValueAsString(generatedPlan));
-                plan.setPlanName(request.getPlanName());
-                plan.setActive(true);
-                plan = workoutPlanRepository.save(plan);
-
-                return new AiWorkoutResponse(plan.getId(), plan.getGeneratedPlanJson(), "Workout created successfully!", plan.getPlanName());
-
-            } catch (Exception e) {
-                lastException = e;
-                retryCount++;
-                System.err.println("AI Workout attempt " + retryCount + " failed: " + e.getMessage());
-                if (retryCount < maxRetries) {
-                    try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
-                }
-            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to process AI workout plan: " + e.getMessage(), e);
         }
-        throw new RuntimeException("Failed to process AI workout plan after " + maxRetries + " attempts. Last error: " + lastException.getMessage(), lastException);
     }
     private String buildPrompt(AiWorkoutRequest request) {
         String genderStr = request.getGender() != null ? request.getGender() : "Belirtilmemiş";
@@ -123,52 +58,101 @@ public class AiGenerationService {
 
         String levelContext = "";
         if ("Başlangıç".equalsIgnoreCase(request.getLevel())) {
-            levelContext = "FOR BEGINNERS (Başlangıç): Focus on high reps (12-15), moderate 2-3 sets, emphasize perfect form over weight. Use longer rest periods (90-120 saniye).";
+            levelContext = "FOR BEGINNERS: Focus on RPE 6-7 (leaving 3-4 reps in the tank). High reps (12-15) for neuromuscular adaptation. Priority: Machine-based and stable bodyweight movements. NO high-impact or complex Olympic lifts.";
         } else if ("İleri".equalsIgnoreCase(request.getLevel())) {
-            levelContext = "FOR ADVANCED (İleri): Focus on high intensity. Lower reps (6-10) for strength and volume, 4-5 sets. Include progressive overload cues. Shorter rest periods (60-90 saniye) for intensity.";
+            levelContext = "FOR ADVANCED: Focus on RPE 8-9 (leaving 1-2 reps in the tank). Lower reps (6-10) for myofibrillar hypertrophy. Include techniques like 'slow eccentric' or 'pause reps' to increase time under tension safely.";
         } else {
-            levelContext = "FOR INTERMEDIATE (Orta): Balanced hypertrophy focus. 8-12 reps, 3-4 sets. Standard 60-90 saniye rest.";
+            levelContext = "FOR INTERMEDIATE: Focus on RPE 7-8. Standard 8-12 reps. Balanced approach between volume and intensity.";
         }
 
-        return "You are an elite level personal trainer and sports scientist. I need a strictly formatted JSON workout plan for a " + genderStr + " user with the goal: " + request.getGoal() + ". " +
+        String splitInstruction = "";
+        int days = request.getDaysPerWeek();
+
+        if (days == 1) {
+            splitInstruction = "STRUCTURE: Full Body (Tüm Vücut). Ensure a 1:1 ratio of Push to Pull movements to maintain posture.";
+        } else if (days == 2) {
+            splitInstruction = "STRUCTURE: Upper/Lower Split. Focus on fundamental movement patterns: Squat, Hinge, Push, Pull.";
+        } else if (days == 3) {
+            splitInstruction = "STRUCTURE: Push/Pull/Legs. Day 1: Push, Day 2: Pull, Day 3: Legs. Ensure each day includes at least one compound movement.";
+        } else if (days == 4) {
+            splitInstruction = "STRUCTURE: 4-Day Split (Upper/Lower or Push/Pull split). Prioritize symmetry and structural balance.";
+        } else if (days >= 5) {
+            splitInstruction = "STRUCTURE: 5-Day Hypertrophy Split. Limit high-RPE sets to 2 per muscle group to prevent CNS fatigue.";
+        }
+
+        return "You are a PhD-level Sports Scientist and Elite Personal Trainer. I need a strictly formatted JSON workout plan for a " + genderStr + " user with the goal: " + request.getGoal() + ". " +
+                "--- SPORTS SCIENCE & SAFETY PROTOCOL ---\n" +
+                "1. ANTAGONIST BALANCE: For every PUSH movement, there MUST be a PULL movement of similar volume to prevent shoulder/posture injuries.\n" +
+                "2. RPE CUES: Use 'Hissedilen Zorluk' (RPE) to guide intensity safely.\n" +
+                "3. FORM OVER WEIGHT: Prioritize controlled eccentric (indirme) phase.\n" +
+                "4. FORBIDDEN: Do not suggest 'Behind the neck' presses or extremely high-impact plyometrics for beginners.\n" +
+                "--- TRAINING ARCHITECTURE ---\n" +
+                splitInstruction + "\n" +
                 "--- USER CONTEXT ---\n" +
                 "Level: " + request.getLevel() + ". " + levelContext + "\n" +
-                "Days per week: " + request.getDaysPerWeek() + ".\n" +
+                "Days per week: " + days + ".\n" +
                 "Focus Muscles: " + focusMusclesStr + ".\n" +
                 "Available Equipment: " + equipmentsStr + ".\n" +
                 "Extra Information (Injuries/Form): " + request.getExtraInformation() + ".\n" +
                 "--- STRUCTURAL RULES ---\n" +
                 "1. Warmup: DO NOT include warmup exercises. Focus only on the main workout.\n" +
-                "2. Exercise Order: Start with heavy compound movements and move to isolation movements later.\n" +
+                "2. Exercise Order: Start with heavy compound movements (multijoint) and move to isolation later.\n" +
                 "3. Variety: Do not repeat the same exercise twice in a plan.\n" +
-                "4. Safety: Adjust sets and reps strictly according to the level guidelines provided above.\n" +
-                "--- CRITICAL LANGUAGE RULE ---\n" +
-                "ALL textual values like 'dayName' and 'rest' MUST BE IN NATIVE TURKISH. Use terms like '90 saniye dinlenme', '60 saniye'.\n" +
                 "--- JSON OUTPUT FORMAT ---\n" +
-                "ONLY output valid JSON without markdown formatting. Format must be exactly:\n" +
-                "{ \"days\": [ { \"dayName\": \"1. Gün...\", \"exercises\": [ { \"targetMuscle\": \"pectorals\", \"sets\": 3, \"reps\": 12, \"rest\": \"90 sn\" } ] } ] }.\n" +
-                "Valid targetMuscles: [abs, biceps, calves, delts, forearms, glutes, lats, pectorals, spine, triceps, upper back, quadriceps, hamstrings, traps].";
+                "ONLY output valid JSON. Format exactly:\n" +
+                "{ \"days\": [ { \"dayName\": \"1. Gün...\", \"exercises\": [ { \"exerciseName\": \"Example\", \"targetMuscle\": \"pectorals\", \"sets\": 3, \"reps\": 12, \"rest\": \"90 sn\" } ] } ] }.";
     }
 
 private void enrichWithLocalData(ObjectNode planNode, List<String> availableEquipments) {
     Random random = new Random();
+    Set<String> usedExerciseIds = new HashSet<>();
+    List<ExerciseDataDto> warmups = exerciseService.getWarmupExercises();
+
     if (planNode.has("days")) {
         ArrayNode days = (ArrayNode) planNode.get("days");
         for (JsonNode dayNode : days) {
+            ObjectNode dayObj = (ObjectNode) dayNode;
+            
+            // Add warmup exercises (3-4 random selections from warmup-eligible database)
+            ArrayNode warmupArray = dayObj.putArray("warmupExercises");
+            if (!warmups.isEmpty()) {
+                List<ExerciseDataDto> shuffledWarmups = new ArrayList<>(warmups);
+                Collections.shuffle(shuffledWarmups);
+                int count = 3 + random.nextInt(2); // 3 to 4 exercises
+                for (int i = 0; i < Math.min(count, shuffledWarmups.size()); i++) {
+                    ExerciseDataDto w = shuffledWarmups.get(i);
+                    ObjectNode wNode = warmupArray.addObject();
+                    wNode.put("exerciseId", w.getExerciseId());
+                    wNode.put("exerciseName", w.getName());
+                    wNode.put("gifUrl", w.getGifUrl());
+                    wNode.put("sets", "1");
+                    wNode.put("reps", "10-15");
+                    wNode.put("rest", "30 sn");
+                    
+                    ArrayNode imgs = wNode.putArray("images");
+                    if (w.getImages() != null) w.getImages().forEach(imgs::add);
+                    
+                    ArrayNode instructions = wNode.putArray("instructions");
+                    if (w.getInstructions() != null) w.getInstructions().forEach(instructions::add);
+                }
+            }
+
             // Enrich regular exercises
             if (dayNode.has("exercises")) {
-                enrichExerciseArray((ArrayNode) dayNode.get("exercises"), availableEquipments, random);
+                enrichExerciseArray((ArrayNode) dayNode.get("exercises"), availableEquipments, random, usedExerciseIds);
             }
         }
     }
 }
 
-private void enrichExerciseArray(ArrayNode exercisesArray, List<String> availableEquipments, Random random) {
+private void enrichExerciseArray(ArrayNode exercisesArray, List<String> availableEquipments, Random random, Set<String> usedExerciseIds) {
     for (JsonNode exerciseNode : exercisesArray) {
         String targetMuscle = exerciseNode.path("targetMuscle").asText().toLowerCase();
         String aiSuggestedName = exerciseNode.path("exerciseName").asText("");
 
+        List<ExerciseDataDto> exercises = exerciseService.getExercisesCache();
         List<ExerciseDataDto> matches = exercises.stream()
+                .filter(e -> !usedExerciseIds.contains(e.getExerciseId()))
                 .filter(e -> (e.getTargetMuscles() != null && e.getTargetMuscles().contains(targetMuscle)) ||
                         (e.getSecondaryMuscles() != null && e.getSecondaryMuscles().contains(targetMuscle)) ||
                         (aiSuggestedName != null && !aiSuggestedName.isEmpty() && e.getName().toLowerCase().contains(aiSuggestedName.toLowerCase())))
@@ -188,6 +172,14 @@ private void enrichExerciseArray(ArrayNode exercisesArray, List<String> availabl
 
         if (matches.isEmpty() && !exercises.isEmpty()) {
             matches = exercises.stream()
+                    .filter(e -> !usedExerciseIds.contains(e.getExerciseId()))
+                    .filter(e -> (e.getTargetMuscles() != null && e.getTargetMuscles().contains(targetMuscle)))
+                    .collect(Collectors.toList());
+        }
+
+        // Final fallback: if still empty, relax the uniqueness constraint
+        if (matches.isEmpty() && !exercises.isEmpty()) {
+            matches = exercises.stream()
                     .filter(e -> (e.getTargetMuscles() != null && e.getTargetMuscles().contains(targetMuscle)))
                     .collect(Collectors.toList());
         }
@@ -195,8 +187,15 @@ private void enrichExerciseArray(ArrayNode exercisesArray, List<String> availabl
         ObjectNode modifiableExercise = (ObjectNode) exerciseNode;
         if (!matches.isEmpty()) {
             ExerciseDataDto chosen = matches.get(random.nextInt(matches.size()));
+            usedExerciseIds.add(chosen.getExerciseId());
             modifiableExercise.put("exerciseName", chosen.getName());
             modifiableExercise.put("gifUrl", chosen.getGifUrl());
+
+            ArrayNode imagesNode = objectMapper.createArrayNode();
+            if (chosen.getImages() != null) {
+                chosen.getImages().forEach(imagesNode::add);
+            }
+            modifiableExercise.set("images", imagesNode);
 
             ArrayNode instructions = objectMapper.createArrayNode();
             if (chosen.getInstructions() != null) {

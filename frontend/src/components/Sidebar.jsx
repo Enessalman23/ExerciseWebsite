@@ -1,12 +1,13 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Dumbbell, Apple, Activity, Calculator, MessageSquare } from 'lucide-react';
+import { Home, Dumbbell, Apple, Activity, Calculator, MessageSquare, Hamburger   } from 'lucide-react';
 
 const Sidebar = () => {
   const navItems = [
     { name: 'Ana Sayfa', path: '/dashboard', icon: <Home size={20} /> },
     { name: 'Antrenmanlar', path: '/workouts', icon: <Dumbbell size={20} /> },
     { name: 'Diyet Planı', path: '/diet', icon: <Apple size={20} /> },
+    { name: 'Beslenme Günlüğü', path: '/journal', icon: <Hamburger  size={20} /> },
     { name: 'AI Antrenör', path: '/coach', icon: <MessageSquare size={20} /> },
     { name: 'Kalori (BMR)', path: '/bmr', icon: <Calculator size={20} /> },
     { name: 'Profilim', path: '/metrics', icon: <Activity size={20} /> },

@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  Award, PlayCircle, ChevronDown, ChevronUp, Trash2, Calendar, Layout, ArrowUpRight 
+  Award, PlayCircle, ChevronDown, ChevronUp, Trash2, Calendar, Layout, ArrowUpRight, CheckCircle2 
 } from 'lucide-react';
 
 const WorkoutCard = ({ 
@@ -45,7 +45,7 @@ const WorkoutCard = ({
          <div style={{ display: 'flex', gap: '12px' }}>
             {!isCorrupted && (
               <button 
-                  onClick={(e) => { e.stopPropagation(); setActiveSession(planData); }} 
+                  onClick={(e) => { e.stopPropagation(); setActiveSession({ ...planData, workoutPlanId: item.workoutPlanId }); }} 
                    className="btn btn-primary glow-effect" 
                   style={{ padding: '12px 24px' }}
                >
@@ -64,11 +64,32 @@ const WorkoutCard = ({
       {isExpanded && !isCorrupted && planData && (
          <div className="animate-fade-in" style={{ padding: '0 28px 28px', borderTop: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.01)' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginTop: '24px' }}>
-               {planData.days?.map((day, dIdx) => (
-                 <div key={dIdx} className="glass-panel" style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <div style={{ fontWeight: 800, marginBottom: '16px', color: 'var(--primary)', fontSize: '0.95rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', display: 'flex', justifyContent: 'space-between' }}>
-                       {day.dayName.toUpperCase()}
-                       <Layout size={16} />
+                {planData.days?.map((day, dIdx) => {
+                  // Her gün için bitirilme durumunu kontrol et
+                  const storageKey = `completed_days_${item.workoutPlanId}`;
+                  const saved = localStorage.getItem(storageKey);
+                  const completedDays = saved ? JSON.parse(saved) : [];
+                  const isCompleted = completedDays.includes(dIdx);
+
+                  return (
+                    <div key={dIdx} className="glass-panel" style={{ 
+                      padding: '20px', 
+                      background: isCompleted ? 'rgba(14, 165, 233, 0.05)' : 'rgba(255,255,255,0.02)', 
+                      border: isCompleted ? '1px solid var(--primary)' : '1px solid rgba(255,255,255,0.05)',
+                      position: 'relative'
+                    }}>
+                      <div style={{ fontWeight: 800, marginBottom: '16px', color: isCompleted ? 'var(--secondary)' : 'var(--primary)', fontSize: '0.95rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {isCompleted ? <CheckCircle2 size={16} /> : <Layout size={16} />} 
+                          {day.dayName.toUpperCase()}
+                        </span>
+                       <button 
+                          onClick={(e) => { e.stopPropagation(); setActiveSession({ ...planData, startDayIdx: dIdx, workoutPlanId: item.workoutPlanId }); }}
+                          className="btn btn-primary"
+                          style={{ padding: '4px 12px', fontSize: '0.7rem', borderRadius: '8px' }}
+                       >
+                          <PlayCircle size={12} style={{ marginRight: '4px' }} /> BAŞLAT
+                       </button>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                        {day.exercises?.map((ex, eIdx) => (
@@ -85,14 +106,15 @@ const WorkoutCard = ({
                        ))}
                     </div>
                  </div>
-               ))}
+                    );
+                })}
             </div>
             
             <div style={{ marginTop: '24px', textAlign: 'center' }}>
-               <button onClick={() => setActiveSession(planData)} className="btn btn-primary" style={{ padding: '10px 30px', borderRadius: '12px' }}>
-                  Bu Programa Başla <ArrowUpRight size={18} style={{ marginLeft: '8px' }} />
-               </button>
-            </div>
+                <button onClick={() => setActiveSession({ ...planData, workoutPlanId: item.workoutPlanId })} className="btn btn-primary" style={{ padding: '10px 30px', borderRadius: '12px' }}>
+                   Bu Programa Başla <ArrowUpRight size={18} style={{ marginLeft: '8px' }} />
+                </button>
+             </div>
          </div>
       )}
     </div>

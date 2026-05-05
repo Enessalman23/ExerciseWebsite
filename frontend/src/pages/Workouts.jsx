@@ -7,13 +7,13 @@ import {
 import WorkoutPlayer from '../components/WorkoutPlayer';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useToast } from '../context/ToastContext';
+import { safeParseJson } from '../utils/jsonUtils';
 
 // New Sub-components
 import WorkoutWizard from '../components/workout/WorkoutWizard';
 import WorkoutHistory from '../components/workout/WorkoutHistory';
 
 const Workouts = () => {
-  const navigate = useNavigate();
   const [historyItems, setHistoryItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [generationLoading, setGenerationLoading] = useState(false);
@@ -114,19 +114,12 @@ const Workouts = () => {
     }
   };
 
-  const parseWorkoutJson = (jsonString) => {
-    try {
-      if (!jsonString || jsonString.trim() === "") return null;
-      return JSON.parse(jsonString);
-    } catch (e) {
-      return "CORRUPTED";
-    }
-  };
+
 
   const getLatestPlan = () => {
     if (historyItems.length === 0) return null;
     const latest = historyItems[0];
-    return { ...latest, data: parseWorkoutJson(latest.workoutPlanJson) };
+    return { ...latest, data: safeParseJson(latest.workoutPlanJson, "CORRUPTED") };
   };
 
   const latestPlan = getLatestPlan();
@@ -165,7 +158,7 @@ const Workouts = () => {
              </div>
              <div style={{ position: 'relative', zIndex: 1 }}>
                 <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Aktif Programın</div>
-                <h3 style={{ fontSize: '1.6rem', marginBottom: '16px' }}>AI Özel Gelişim Planı</h3>
+                <h3 style={{ fontSize: '1.6rem', marginBottom: '16px' }}>{latestPlan.planName}</h3>
                 
                 <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
                    <div className="workout-badge workout-badge-primary" style={{ padding: '6px 14px' }}>
@@ -177,7 +170,7 @@ const Workouts = () => {
                 </div>
 
                 <button 
-                  onClick={() => latestPlan.data && setActiveSession(latestPlan.data)}
+                  onClick={() => latestPlan.data && setActiveSession({ ...latestPlan.data, workoutPlanId: latestPlan.workoutPlanId })}
                   className="btn btn-primary" 
                   style={{ width: '100%', height: '54px', fontSize: '1.1rem', boxShadow: '0 15px 30px var(--primary-glow)' }}
                 >
@@ -211,7 +204,7 @@ const Workouts = () => {
           setExpandedPlan={setExpandedPlan}
           setActiveSession={setActiveSession}
           handleDeleteWorkout={handleDeleteWorkout}
-          parseWorkoutJson={parseWorkoutJson}
+          parseWorkoutJson={(json) => safeParseJson(json, "CORRUPTED")}
         />
       </div>
 

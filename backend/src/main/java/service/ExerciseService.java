@@ -1,20 +1,17 @@
 package service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import dto.ExerciseDataDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,24 +19,64 @@ import java.util.stream.Collectors;
 public class ExerciseService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private List<Map<String, Object>> exercisesCache = new ArrayList<>();
+    
+    @Getter
+    private List<ExerciseDataDto> exercisesCache = new ArrayList<>();
 
     @PostConstruct
     public void init() {
         try {
-            File jsonFile = Paths.get("exercisedb_v1_sample", "exercises.json").toFile();
-            if (jsonFile.exists()) {
-                exercisesCache = objectMapper.readValue(jsonFile, new TypeReference<List<Map<String, Object>>>() {});
-                log.info("Loaded {} exercises for lookup", exercisesCache.size());
+            File exercisesRoot = Paths.get("exercises-data", "exercises").toFile();
+            if (exercisesRoot.exists() && exercisesRoot.isDirectory()) {
+                File[] folders = exercisesRoot.listFiles(File::isDirectory);
+                if (folders != null) {
+                    for (File folder : folders) {
+                        File jsonFile = new File(folder, "exercise.json");
+                        if (jsonFile.exists()) {
+                            ExerciseDataDto ex = objectMapper.readValue(jsonFile, ExerciseDataDto.class);
+                            
+                            ex.setExerciseId(folder.getName());
+                            
+                            // Map equipment to equipments (list)
+                            if (ex.getEquipments() == null || ex.getEquipments().isEmpty()) {
+                                if (ex.getEquipment() != null) {
+                                    List<String> eqs = new ArrayList<>();
+                                    eqs.add(ex.getEquipment());
+                                    ex.setEquipments(eqs);
+                                }
+                            }
+
+                            // Add image paths
+                            File imagesDir = new File(folder, "images");
+                            List<String> imagePaths = new ArrayList<>();
+                            if (imagesDir.exists() && imagesDir.isDirectory()) {
+                                File[] images = imagesDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".jpg") || name.toLowerCase().endsWith(".png"));
+                                if (images != null) {
+                                    Arrays.sort(images);
+                                    for (File img : images) {
+                                        imagePaths.add(folder.getName() + "/images/" + img.getName());
+                                    }
+                                }
+                            }
+                            ex.setImages(imagePaths);
+                            if (!imagePaths.isEmpty()) {
+                                ex.setGifUrl(imagePaths.get(0));
+                            }
+
+                            exercisesCache.add(ex);
+                        }
+                    }
+                }
+                log.info("Loaded {} exercises from exercises-data directory", exercisesCache.size());
             } else {
-                log.error("Could not find exercises.json at {}", jsonFile.getAbsolutePath());
+                log.error("Could not find exercises directory at {}", exercisesRoot.getAbsolutePath());
             }
         } catch (IOException e) {
-            log.error("Failed to load local exercise data", e);
+            log.error("Failed to load exercise data from exercises-data", e);
         }
     }
 
-    public List<Map<String, Object>> getExercisesByMuscle(String muscleName) {
+    public List<ExerciseDataDto> getExercisesByMuscle(String muscleName) {
         if (muscleName == null || muscleName.isEmpty()) return new ArrayList<>();
         String query = muscleName.toLowerCase().trim();
 
@@ -114,19 +151,8 @@ public class ExerciseService {
         }
 
         return exercisesCache.stream().filter(ex -> {
-            // Handle both singular (old) and plural (new API) fields
-            Object target = ex.get("targetMuscles");
-            if (target == null) target = ex.get("target"); // fallback for old data
-            
-            List<String> targetMuscles = new ArrayList<>();
-            if (target instanceof List) {
-                targetMuscles = (List<String>) target;
-            } else if (target instanceof String) {
-                targetMuscles.add((String) target);
-            }
-
-            Object secondary = ex.get("secondaryMuscles");
-            List<String> secondaryMuscles = (secondary instanceof List) ? (List<String>) secondary : new ArrayList<>();
+            List<String> targetMuscles = ex.getTargetMuscles() != null ? ex.getTargetMuscles() : new ArrayList<>();
+            List<String> secondaryMuscles = ex.getSecondaryMuscles() != null ? ex.getSecondaryMuscles() : new ArrayList<>();
             
             boolean matchesPrimary = targetMuscles.stream()
                 .anyMatch(tm -> mappedMuscles.contains(tm.toLowerCase()));
@@ -134,6 +160,24 @@ public class ExerciseService {
                 .anyMatch(sm -> mappedMuscles.contains(sm.toLowerCase()));
             
             return matchesPrimary || matchesSecondary;
+        }).collect(Collectors.toList());
+    }
+    public List<ExerciseDataDto> getWarmupExercises() {
+        return exercisesCache.stream().filter(ex -> {
+            String cat = ex.getCategory() != null ? ex.getCategory().toLowerCase() : "";
+            String name = ex.getName() != null ? ex.getName().toLowerCase() : "";
+            String level = ex.getLevel() != null ? ex.getLevel().toLowerCase() : "";
+            String equip = ex.getEquipment() != null ? ex.getEquipment().toLowerCase() : "";
+
+            // Warmup criteria: Stretching, Cardio, or light bodyweight beginner movements
+            boolean isStretching = cat.contains("stretching");
+            boolean isCardio = cat.contains("cardio");
+            boolean isWarmupKeywords = name.contains("circle") || name.contains("stretch") || name.contains("rotation") 
+                                    || name.contains("warm up") || name.contains("warmup");
+            boolean isLightBodyweight = level.equals("beginner") && equip.contains("body only") 
+                                     && (name.contains("pushup") || name.contains("sit-up") || name.contains("crunch") || name.contains("plank") || name.contains("jumping jack"));
+
+            return isStretching || isCardio || isWarmupKeywords || isLightBodyweight;
         }).collect(Collectors.toList());
     }
 }

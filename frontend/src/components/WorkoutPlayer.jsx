@@ -1,19 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
-  X, PlayCircle, SkipForward, CheckCircle2, 
-  Timer, Clock, ArrowRight, Dumbbell, Info,
-  ChevronRight, ListOrdered, Award, Zap
+  X, SkipForward, CheckCircle2, 
+  Timer, ArrowRight, Info,
+  ChevronRight, ListOrdered, Zap
 } from 'lucide-react';
+import { useWorkoutTimer } from '../hooks/useWorkoutTimer';
+import ExerciseDisplay from './workout/ExerciseDisplay';
 
 const WorkoutPlayer = ({ plan, onClose }) => {
-  const [currentDayIdx, setCurrentDayIdx] = useState(0);
-  const [currentStep, setCurrentStep] = useState('exercise'); // 'warmup', 'exercise', 'rest', 'finished'
-  const [exerciseIdx, setExerciseIdx] = useState(0);
-  const [warmupIdx, setWarmupIdx] = useState(0);
-  const [restTimer, setRestTimer] = useState(0);
-  const [isTimerActive, setIsTimerActive] = useState(false);
-
-  // Safety check
+  // Safety check FIRST to prevent crashes
   if (!plan || !plan.days || plan.days.length === 0) {
     return (
       <div className="modal-overlay" style={{ background: 'var(--bg-color)', zIndex: 9999 }}>
@@ -27,25 +22,59 @@ const WorkoutPlayer = ({ plan, onClose }) => {
     );
   }
 
-  const currentDay = plan.days[currentDayIdx];
-  const warmupExercises = currentDay.warmupExercises || [];
-  const exercises = currentDay.exercises || [];
+  const [currentDayIdx, setCurrentDayIdx] = useState(() => {
+    try {
+      const startIdx = plan?.startDayIdx || 0;
+      return (plan?.days && startIdx >= 0 && startIdx < plan.days.length) ? startIdx : 0;
+    } catch (e) { return 0; }
+  });
+
+  const currentDay = (plan?.days && plan.days[currentDayIdx]) || (plan?.days && plan.days[0]) || null;
+  const warmupExercises = currentDay?.warmupExercises || [];
+  const exercises = currentDay?.exercises || [];
+
+  const [currentStep, setCurrentStep] = useState(warmupExercises.length > 0 ? 'warmup' : 'exercise');
+  const [exerciseIdx, setExerciseIdx] = useState(0);
+  const [warmupIdx, setWarmupIdx] = useState(0);
   
+  // Kalıcı ilerleme takibi için localStorage kullanıyoruz
+  const storageKey = `completed_days_${plan.workoutPlanId || 'default'}`;
+  const [completedDays, setCompletedDays] = useState(() => {
+    const saved = localStorage.getItem(storageKey);
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Tamamlanan günleri kaydet
+  useEffect(() => {
+    if (currentStep === 'finished' && !completedDays.includes(currentDayIdx)) {
+      const newCompleted = [...completedDays, currentDayIdx];
+      setCompletedDays(newCompleted);
+      localStorage.setItem(storageKey, JSON.stringify(newCompleted));
+    }
+  }, [currentStep, currentDayIdx, completedDays, storageKey]);
+
+  // Safety return if still no data
+  if (!currentDay) {
+    return (
+      <div className="modal-overlay" style={{ background: 'var(--bg-color)', zIndex: 9999 }}>
+        <div className="glass-panel text-center" style={{ padding: '60px' }}>
+          <h2>Hata</h2>
+          <p>Seçilen güne ait veri bulunamadı.</p>
+          <button onClick={onClose} className="btn btn-primary">Kapat</button>
+        </div>
+      </div>
+    );
+  }
+
   const currentWarmup = warmupExercises[warmupIdx];
   const currentExercise = currentStep === 'warmup' ? currentWarmup : exercises[exerciseIdx];
 
-  useEffect(() => {
-    let interval = null;
-    if (isTimerActive && restTimer > 0) {
-      interval = setInterval(() => setRestTimer(prev => prev - 1), 1000);
-    } else if (restTimer === 0 && isTimerActive) {
-      setIsTimerActive(false);
-      handleStepNext();
-    }
-    return () => clearInterval(interval);
-  }, [isTimerActive, restTimer]);
 
-  const handleStepNext = () => {
+
+  const handleStepNextRef = useRef();
+  const startTimerRef = useRef();
+
+  const handleStepNext = useCallback(() => {
     if (currentStep === 'warmup') {
       if (warmupIdx < warmupExercises.length - 1) {
         setWarmupIdx(prev => prev + 1);
@@ -54,10 +83,10 @@ const WorkoutPlayer = ({ plan, onClose }) => {
         setExerciseIdx(0);
       }
     } else if (currentStep === 'exercise') {
-      const restSec = parseInt(currentExercise.rest) || 60;
-      setRestTimer(restSec);
+      const restVal = currentExercise?.rest;
+      const restSec = (restVal !== null && restVal !== undefined && !isNaN(parseInt(restVal))) ? parseInt(restVal) : 60;
       setCurrentStep('rest');
-      setIsTimerActive(true);
+      if (startTimerRef.current) startTimerRef.current(restSec);
     } else if (currentStep === 'rest') {
       if (exerciseIdx < exercises.length - 1) {
         setExerciseIdx(prev => prev + 1);
@@ -66,9 +95,26 @@ const WorkoutPlayer = ({ plan, onClose }) => {
         setCurrentStep('finished');
       }
     }
-  };
+  }, [currentStep, warmupIdx, warmupExercises.length, currentExercise, exercises.length, exerciseIdx]);
 
-  if (!currentDay || !exercises) return null;
+  handleStepNextRef.current = handleStepNext;
+
+  const { restTimer, startTimer, stopTimer, skipTimer } = useWorkoutTimer(() => handleStepNextRef.current());
+  startTimerRef.current = startTimer;
+
+  // Cleanup timer on day change or unmount
+  useEffect(() => {
+    return () => stopTimer();
+  }, [currentDayIdx, stopTimer]);
+
+
+  const getImageUrl = (path) => {
+    if (!path) return '';
+    if (!path.includes('gifs_360x360')) {
+        return `http://localhost:8080/exercise-images/${path}`;
+    }
+    return `http://localhost:8080/gifs/gifs_360x360/${path}`;
+  };
 
   const totalActions = warmupExercises.length + exercises.length;
   const currentActionIdx = currentStep === 'warmup' ? warmupIdx : warmupExercises.length + exerciseIdx;
@@ -94,14 +140,44 @@ const WorkoutPlayer = ({ plan, onClose }) => {
 
       {/* HEADER */}
       <div style={{ padding: '30px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <div style={{ background: 'var(--primary)', padding: '8px', borderRadius: '10px' }}>
-            <Zap size={20} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <div style={{ background: 'var(--primary)', padding: '8px', borderRadius: '10px' }}>
+              <Zap size={20} />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '1px' }}>Aktif Antrenman</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: 400 }}>{currentDay.dayName}</div>
+            </div>
           </div>
-          <div>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '1px' }}>Aktif Antrenman</div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 400 }}>{currentDay.dayName}</div>
-          </div>
+
+          {plan.days.length > 1 && (
+            <div style={{ display: 'flex', gap: '15px' }}>
+              {plan.days.map((day, idx) => (
+                <button 
+                  key={idx} 
+                  onClick={() => {
+                    setCurrentDayIdx(idx);
+                    setCurrentStep(warmupExercises.length > 0 ? 'warmup' : 'exercise');
+                    setExerciseIdx(0);
+                    setWarmupIdx(0);
+                    stopTimer();
+                  }}
+                  style={{ 
+                    padding: '8px 20px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: 700, 
+                    border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    background: currentDayIdx === idx ? 'var(--primary)' : 'transparent',
+                    color: currentDayIdx === idx ? '#fff' : (completedDays.includes(idx) ? 'var(--secondary)' : 'rgba(255,255,255,0.4)'),
+                    display: 'flex', alignItems: 'center', gap: '8px'
+                  }}
+                >
+                  {completedDays.includes(idx) && <CheckCircle2 size={14} />}
+                  GÜN {idx + 1}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         
         <button onClick={onClose} style={{ 
@@ -117,94 +193,28 @@ const WorkoutPlayer = ({ plan, onClose }) => {
       {/* MAIN CONTENT AREA */}
       <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 0.8fr)', gap: '60px', padding: '0 60px 60px', overflow: 'hidden' }}>
         
-        {/* LEFT PANEL: HERO GIF */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', overflow: 'hidden' }}>
-          
-          <div className="glass-panel" style={{ 
-            flex: 1, position: 'relative', borderRadius: '40px', overflow: 'hidden', 
-            background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)',
-            display: 'flex', justifyContent: 'center', alignItems: 'center'
-          }}>
-            {currentStep === 'warmup' && currentWarmup && (
-              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
-                {currentWarmup.gifUrl ? (
-                  <img 
-                    src={`http://localhost:8080/gifs/gifs_360x360/${currentWarmup.gifUrl}`} 
-                    alt={currentWarmup.exerciseName}
-                    style={{ maxHeight: '90%', maxWidth: '90%', borderRadius: '24px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}
-                    onError={(e) => { e.target.src = "https://via.placeholder.com/600x600?text=ISINMA+GIF"; }}
-                  />
-                ) : (
-                  <div className="text-center">
-                    <Clock size={100} style={{ opacity: 0.1, color: 'var(--primary)' }} />
-                    <h2 style={{ fontSize: '2rem', marginTop: '20px' }}>Isınma Zamanı</h2>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {currentStep === 'exercise' && currentExercise && (
-              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
-                {currentExercise.gifUrl ? (
-                  <img 
-                    src={`http://localhost:8080/gifs/gifs_360x360/${currentExercise.gifUrl}`} 
-                    alt={currentExercise.exerciseName}
-                    style={{ maxHeight: '90%', maxWidth: '90%', borderRadius: '24px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}
-                    onError={(e) => { e.target.src = "https://via.placeholder.com/600x600?text=GIF+Yükleniyor..."; }}
-                  />
-                ) : (
-                  <Dumbbell size={100} style={{ opacity: 0.1 }} />
-                )}
-              </div>
-            )}
-
-            {currentStep === 'rest' && (
-              <div className="text-center">
-                <div style={{ fontSize: '10rem', fontWeight: 900, fontFamily: 'monospace', letterSpacing: '-5px', lineHeight: 1 }}>
-                  {restTimer}
-                </div>
-                <div style={{ fontSize: '1.5rem', color: 'var(--secondary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '4px' }}>
-                  Dinlenme Zamanı
-                </div>
-              </div>
-            )}
-
-            {currentStep === 'finished' && (
-              <div className="text-center animate-fade-in">
-                <Award size={120} style={{ color: 'var(--secondary)' }} />
-                <h2 style={{ fontSize: '4rem', marginTop: '30px' }}>YIKTIN GEÇTİN!</h2>
-              </div>
-            )}
-          </div>
-
-          {(currentStep === 'warmup' || currentStep === 'exercise' || currentStep === 'rest') && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '0 10px' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: currentStep === 'warmup' ? 'var(--secondary)' : 'var(--primary)', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 700 }}>
-                   {currentStep === 'warmup' ? <Zap size={16} /> : <Dumbbell size={16} />}
-                   {currentStep === 'warmup' ? 'ISINMA' : 'ANA ANTRENMAN'}
-                </div>
-                <h2 style={{ fontSize: '3rem', margin: 0, fontWeight: 800, color: '#fff', textTransform: 'capitalize' }}>{currentExercise?.exerciseName || (currentStep === 'warmup' ? "Isınma Hareketi" : "Egzersiz")}</h2>
-                <div style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
-                  <span style={{ fontSize: '1.2rem', color: currentStep === 'warmup' ? 'var(--secondary)' : 'var(--primary)', fontWeight: 600 }}>{currentExercise?.targetMuscle?.toUpperCase()}</span>
-                  <span style={{ opacity: 0.3 }}>|</span>
-                  <span style={{ fontSize: '1.2rem', opacity: 0.6 }}>{currentStep === 'warmup' ? `Isınma ${warmupIdx + 1} / ${warmupExercises.length}` : `Egzersiz ${exerciseIdx + 1} / ${exercises.length}`}</span>
-                </div>
-              </div>
-              
-              <div style={{ display: 'flex', gap: '20px' }}>
-                <div className="glass-panel" style={{ padding: '20px 30px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--secondary)' }}>{currentExercise?.sets}</div>
-                  <div style={{ fontSize: '0.8rem', opacity: 0.5, fontWeight: 700 }}>SET GEREĞİ</div>
-                </div>
-                <div className="glass-panel" style={{ padding: '20px 30px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--secondary)' }}>{currentExercise?.reps}</div>
-                  <div style={{ fontSize: '0.8rem', opacity: 0.5, fontWeight: 700 }}>TEKRAR</div>
-                </div>
-              </div>
+        <ExerciseDisplay 
+          currentStep={currentStep}
+          currentWarmup={currentWarmup}
+          currentExercise={currentExercise}
+          restTimer={restTimer}
+          getImageUrl={getImageUrl}
+          warmupIdx={warmupIdx}
+          warmupExercises={warmupExercises}
+          exerciseIdx={exerciseIdx}
+          exercises={exercises}
+        >
+          <div style={{ display: 'flex', gap: '20px' }}>
+            <div className="glass-panel" style={{ padding: '20px 30px', textAlign: 'center' }}>
+              <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--secondary)' }}>{currentExercise?.sets}</div>
+              <div style={{ fontSize: '0.8rem', opacity: 0.5, fontWeight: 700 }}>SET GEREĞİ</div>
             </div>
-          )}
-        </div>
+            <div className="glass-panel" style={{ padding: '20px 30px', textAlign: 'center' }}>
+              <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--secondary)' }}>{currentExercise?.reps}</div>
+              <div style={{ fontSize: '0.8rem', opacity: 0.5, fontWeight: 700 }}>TEKRAR</div>
+            </div>
+          </div>
+        </ExerciseDisplay>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', maxHeight: '100%', overflow: 'hidden' }}>
           
@@ -213,7 +223,7 @@ const WorkoutPlayer = ({ plan, onClose }) => {
             background: 'rgba(255,255,255,0.03)', borderRadius: '40px',
             display: 'flex', flexDirection: 'column'
           }}>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '30px', fontSize: '1.4rem' }}>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '30px', fontSize: '1.4rem', color: '#fff' }}>
               <ListOrdered size={24} color="var(--primary)" /> Nasıl Uygulanır?
             </h3>
             
@@ -228,7 +238,7 @@ const WorkoutPlayer = ({ plan, onClose }) => {
                     }}>
                       {idx + 1}
                     </div>
-                    <p style={{ margin: 0, fontSize: '1.05rem', lineHeight: 1.6, opacity: 0.8 }}>
+                    <p style={{ margin: 0, fontSize: '1.05rem', lineHeight: 1.6, opacity: 0.9, color: '#fff' }}>
                       {step.replace(/Step:\d+\s*/g, '')}
                     </p>
                   </div>
@@ -265,22 +275,24 @@ const WorkoutPlayer = ({ plan, onClose }) => {
 
             {currentStep === 'rest' && (
               <button 
-                onClick={() => { setIsTimerActive(false); handleStepNext(); }} 
+                onClick={skipTimer} 
                 className="btn btn-secondary" 
-                style={{ padding: '20px', fontSize: '1.2rem', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)' }}
+                style={{ padding: '20px', fontSize: '1.2rem', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
               >
                 Dinlenmeyi Atla <SkipForward size={22} style={{ marginLeft: '10px' }} />
               </button>
             )}
 
             {currentStep === 'finished' && (
-              <button 
-                onClick={onClose} 
-                className="btn btn-primary" 
-                style={{ padding: '25px', fontSize: '1.4rem', borderRadius: '24px', boxShadow: '0 10px 40px rgba(79, 70, 229, 0.4)' }}
-              >
-                Antrenmanı Bitir <CheckCircle2 size={24} style={{ marginLeft: '10px' }} />
-              </button>
+              <div style={{ display: 'flex', gap: '20px', width: '100%', justifyContent: 'center' }}>
+                <button 
+                  onClick={onClose} 
+                  className="btn btn-primary" 
+                  style={{ padding: '20px 60px', fontSize: '1.2rem', borderRadius: '24px', boxShadow: '0 10px 40px rgba(79, 70, 229, 0.4)' }}
+                >
+                  <CheckCircle2 size={24} style={{ marginRight: '10px' }} /> Antrenmanı Bitir ve Kapat
+                </button>
+              </div>
             )}
           </div>
         </div>

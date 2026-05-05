@@ -1,5 +1,6 @@
 package entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,6 +21,7 @@ public class DietPlan {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -29,7 +31,6 @@ public class DietPlan {
 
     private String planName;
 
-    // Yapay zeka JSON üretse bile, istatistik için ana verileri ayrı sütunlara almak iyidir.
     private Integer targetDailyCalories;
     private Integer targetProtein;
     private Integer targetCarbs;
