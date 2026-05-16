@@ -34,7 +34,7 @@ public class MetricsService {
     public MetricsResponse getLatestMetrics(User user) {
         return metricsRepository.findFirstByUserOrderByRecordedAtDesc(user)
                 .map(this::mapToResponse)
-                .orElseThrow(() -> new RuntimeException("Metrics not found for user"));
+                .orElse(null);
     }
 
     private MetricsResponse mapToResponse(UserMetrics metrics) {

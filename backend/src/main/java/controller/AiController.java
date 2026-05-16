@@ -23,6 +23,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import service.AiFeedbackService;
+import service.AiRecipeService;
+
 @RestController
 @RequestMapping("/api/ai")
 @RequiredArgsConstructor
@@ -32,6 +35,8 @@ public class AiController {
     private final AiCoachService aiCoachService;
     private final NutritionService nutritionService;
     private final WorkoutPlanRepository workoutPlanRepository;
+    private final AiRecipeService aiRecipeService;
+    private final AiFeedbackService aiFeedbackService;
 
     @PostMapping("/generate-workout")
     public ResponseEntity<AiWorkoutResponse> generateWorkout(@Valid @RequestBody AiWorkoutRequest request,
@@ -88,5 +93,31 @@ public class AiController {
 
         Map<String, Object> analysis = nutritionService.analyzeFood(query);
         return ResponseEntity.ok(analysis);
+    }
+
+    @PostMapping("/recipe")
+    public ResponseEntity<Map<String, String>> generateRecipe(
+            @RequestBody Map<String, String> request,
+            @CurrentUser User user) {
+        String ingredients = request.get("ingredients");
+        if (ingredients == null || ingredients.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Malzemeler boş olamaz."));
+        }
+        String recipe = aiRecipeService.generateRecipe(ingredients, user);
+        return ResponseEntity.ok(Map.of("recipe", recipe));
+    }
+
+    @PostMapping("/workout-feedback")
+    public ResponseEntity<Map<String, String>> getWorkoutFeedback(
+            @RequestBody Map<String, Object> request,
+            @CurrentUser User user) {
+        try {
+            int rpe = Integer.parseInt(request.getOrDefault("rpe", "5").toString());
+            String dayName = request.getOrDefault("dayName", "Antrenman").toString();
+            String feedback = aiFeedbackService.generateWorkoutFeedback(rpe, dayName, user);
+            return ResponseEntity.ok(Map.of("feedback", feedback));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Geçersiz parametreler"));
+        }
     }
 }

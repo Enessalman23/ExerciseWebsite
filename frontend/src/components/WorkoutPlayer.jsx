@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { 
-  X, SkipForward, CheckCircle2, 
-  Timer, ArrowRight, Info,
-  ChevronRight, ListOrdered, Zap
-} from 'lucide-react';
+import { X } from 'lucide-react';
 import { useWorkoutTimer } from '../hooks/useWorkoutTimer';
 import ExerciseDisplay from './workout/ExerciseDisplay';
+import WorkoutPlayerHeader from './workout/WorkoutPlayerHeader';
+import WorkoutPlayerInstructions from './workout/WorkoutPlayerInstructions';
+import WorkoutPlayerControls from './workout/WorkoutPlayerControls';
 
 const WorkoutPlayer = ({ plan, onClose }) => {
   // Safety check FIRST to prevent crashes
@@ -139,56 +138,19 @@ const WorkoutPlayer = ({ plan, onClose }) => {
       </div>
 
       {/* HEADER */}
-      <div style={{ padding: '30px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <div style={{ background: 'var(--primary)', padding: '8px', borderRadius: '10px' }}>
-              <Zap size={20} />
-            </div>
-            <div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '1px' }}>Aktif Antrenman</div>
-              <div style={{ fontSize: '1.2rem', fontWeight: 400 }}>{currentDay.dayName}</div>
-            </div>
-          </div>
-
-          {plan.days.length > 1 && (
-            <div style={{ display: 'flex', gap: '15px' }}>
-              {plan.days.map((day, idx) => (
-                <button 
-                  key={idx} 
-                  onClick={() => {
-                    setCurrentDayIdx(idx);
-                    setCurrentStep(warmupExercises.length > 0 ? 'warmup' : 'exercise');
-                    setExerciseIdx(0);
-                    setWarmupIdx(0);
-                    stopTimer();
-                  }}
-                  style={{ 
-                    padding: '8px 20px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: 700, 
-                    border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    background: currentDayIdx === idx ? 'var(--primary)' : 'transparent',
-                    color: currentDayIdx === idx ? '#fff' : (completedDays.includes(idx) ? 'var(--secondary)' : 'rgba(255,255,255,0.4)'),
-                    display: 'flex', alignItems: 'center', gap: '8px'
-                  }}
-                >
-                  {completedDays.includes(idx) && <CheckCircle2 size={14} />}
-                  GÜN {idx + 1}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-        
-        <button onClick={onClose} style={{ 
-          background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', 
-          borderRadius: '12px', padding: '10px 20px', color: '#fff', 
-          display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
-          transition: 'all 0.2s'
-        }} className="hover-scale">
-          <X size={18} /> Antrenmandan Çık
-        </button>
-      </div>
+      <WorkoutPlayerHeader
+        plan={plan}
+        currentDay={currentDay}
+        currentDayIdx={currentDayIdx}
+        completedDays={completedDays}
+        setCurrentDayIdx={setCurrentDayIdx}
+        setCurrentStep={setCurrentStep}
+        setExerciseIdx={setExerciseIdx}
+        setWarmupIdx={setWarmupIdx}
+        stopTimer={stopTimer}
+        onClose={onClose}
+        warmupExercises={warmupExercises}
+      />
 
       {/* MAIN CONTENT AREA */}
       <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 0.8fr)', gap: '60px', padding: '0 60px 60px', overflow: 'hidden' }}>
@@ -218,83 +180,17 @@ const WorkoutPlayer = ({ plan, onClose }) => {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', maxHeight: '100%', overflow: 'hidden' }}>
           
-          <div className="glass-panel" style={{ 
-            flex: 1, padding: '40px', overflowY: 'auto', 
-            background: 'rgba(255,255,255,0.03)', borderRadius: '40px',
-            display: 'flex', flexDirection: 'column'
-          }}>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '30px', fontSize: '1.4rem', color: '#fff' }}>
-              <ListOrdered size={24} color="var(--primary)" /> Nasıl Uygulanır?
-            </h3>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              {currentExercise?.instructions && currentExercise.instructions.length > 0 ? (
-                currentExercise.instructions.map((step, idx) => (
-                  <div key={idx} style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-                    <div style={{ 
-                      minWidth: '32px', height: '32px', background: 'rgba(255,255,255,0.05)', 
-                      borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center',
-                      fontSize: '0.9rem', fontWeight: 700, border: '1px solid rgba(255,255,255,0.1)'
-                    }}>
-                      {idx + 1}
-                    </div>
-                    <p style={{ margin: 0, fontSize: '1.05rem', lineHeight: 1.6, opacity: 0.9, color: '#fff' }}>
-                      {step.replace(/Step:\d+\s*/g, '')}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <div style={{ padding: '20px', textAlign: 'center', opacity: 0.5 }}>
-                   <Info size={40} style={{ margin: '0 auto 15px' }} />
-                   <p>Açıklama bulunamadı. Formuna odaklan!</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            {currentStep === 'warmup' && (
-              <button 
-                onClick={handleStepNext} 
-                className="btn btn-primary" 
-                style={{ padding: '25px', fontSize: '1.4rem', borderRadius: '24px', boxShadow: '0 10px 40px rgba(79, 70, 229, 0.4)' }}
-              >
-                {warmupIdx < warmupExercises.length - 1 ? "Sıradaki Isınma" : "Antrenmana Başla!"} <ArrowRight size={24} style={{ marginLeft: '10px' }} />
-              </button>
-            )}
-
-            {currentStep === 'exercise' && (
-              <button 
-                onClick={handleStepNext} 
-                className="btn btn-primary" 
-                style={{ padding: '25px', fontSize: '1.4rem', borderRadius: '24px', boxShadow: '0 10px 40px rgba(79, 70, 229, 0.4)' }}
-              >
-                Set Bitti, Dinlen! <Timer size={24} style={{ marginLeft: '10px' }} />
-              </button>
-            )}
-
-            {currentStep === 'rest' && (
-              <button 
-                onClick={skipTimer} 
-                className="btn btn-secondary" 
-                style={{ padding: '20px', fontSize: '1.2rem', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
-              >
-                Dinlenmeyi Atla <SkipForward size={22} style={{ marginLeft: '10px' }} />
-              </button>
-            )}
-
-            {currentStep === 'finished' && (
-              <div style={{ display: 'flex', gap: '20px', width: '100%', justifyContent: 'center' }}>
-                <button 
-                  onClick={onClose} 
-                  className="btn btn-primary" 
-                  style={{ padding: '20px 60px', fontSize: '1.2rem', borderRadius: '24px', boxShadow: '0 10px 40px rgba(79, 70, 229, 0.4)' }}
-                >
-                  <CheckCircle2 size={24} style={{ marginRight: '10px' }} /> Antrenmanı Bitir ve Kapat
-                </button>
-              </div>
-            )}
-          </div>
+          <WorkoutPlayerInstructions currentExercise={currentExercise} />
+          
+          <WorkoutPlayerControls
+            currentStep={currentStep}
+            warmupIdx={warmupIdx}
+            warmupExercises={warmupExercises}
+            handleStepNext={handleStepNext}
+            skipTimer={skipTimer}
+            onClose={onClose}
+            currentDayName={currentDay?.dayName}
+          />
         </div>
       </div>
     </div>

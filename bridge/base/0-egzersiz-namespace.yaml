@@ -1,0 +1,8 @@
+#! 0-egzersiz-namespace.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: egzersiz
+    labels:
+        com.docker.compose.project: egzersiz

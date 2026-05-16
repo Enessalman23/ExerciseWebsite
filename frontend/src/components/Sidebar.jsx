@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Dumbbell, Apple, Activity, Calculator, MessageSquare, Hamburger   } from 'lucide-react';
+import { Home, Dumbbell, Apple, Activity, Calculator, MessageSquare, Hamburger, Trophy, Camera, ScanFace } from 'lucide-react';
 
 const Sidebar = () => {
   const navItems = [
@@ -9,6 +9,10 @@ const Sidebar = () => {
     { name: 'Diyet Planı', path: '/diet', icon: <Apple size={20} /> },
     { name: 'Beslenme Günlüğü', path: '/journal', icon: <Hamburger  size={20} /> },
     { name: 'AI Antrenör', path: '/coach', icon: <MessageSquare size={20} /> },
+    { name: 'AI Şef', path: '/recipe', icon: <Apple size={20} /> },
+    { name: 'AI Form Koçu', path: '/ai-pose-coach', icon: <ScanFace size={20} /> },
+    { name: 'Gelişim Fotoları', path: '/progress-photos', icon: <Camera size={20} /> },
+    { name: 'Başarımlar', path: '/gamification', icon: <Trophy size={20} /> },
     { name: 'Kalori (BMR)', path: '/bmr', icon: <Calculator size={20} /> },
     { name: 'Profilim', path: '/metrics', icon: <Activity size={20} /> },
   ];

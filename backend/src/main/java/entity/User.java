@@ -30,4 +30,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private Integer totalPoints = 0;
 }

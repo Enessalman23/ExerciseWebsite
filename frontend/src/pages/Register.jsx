@@ -1,11 +1,11 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
-import { User, Lock, Mail } from 'lucide-react';
+import { useAuthStore } from '../store/authStore';
+import { User, Lock, Mail, Activity, ChevronRight } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
 const Register = () => {
-  const { register } = useContext(AuthContext);
+  const register = useAuthStore((state) => state.register);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ username: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
@@ -20,7 +20,7 @@ const Register = () => {
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
       console.error(err);
-      let errorMessage = 'An error occurred during registration.';
+      let errorMessage = 'Kayıt sırasında bir hata oluştu.';
       if (err.response?.data) {
         if (typeof err.response.data === 'string') {
           errorMessage = err.response.data;
@@ -39,74 +39,101 @@ const Register = () => {
   };
 
   return (
-    <div className="container flex justify-center items-center" style={{ minHeight: '100vh' }}>
-      <div className="glass-panel animate-fade-in" style={{ width: '100%', maxWidth: '420px', padding: '40px' }}>
-        <div className="text-center mb-4">
-          <h1 style={{ marginBottom: '10px' }}>Join AI Fitness</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Create an account to track your progress</p>
+    <div className="split-screen-container">
+      {/* Sol Taraf: Görsel ve Marka */}
+      <div className="split-left">
+        <img 
+          src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop" 
+          alt="Fitness Background" 
+          className="auth-image-bg"
+        />
+        <div className="auth-image-overlay">
+          <div className="floating" style={{ marginBottom: '30px' }}>
+            <div style={{ background: 'var(--primary)', width: '60px', height: '60px', borderRadius: '15px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <Activity size={32} color="#fff" />
+            </div>
+          </div>
+          <h2 style={{ fontSize: '3rem', fontWeight: '800', lineHeight: '1.1', marginBottom: '20px' }}>
+            Yeni Bir Sen <br/><span style={{ color: 'var(--secondary)' }}>İnşa Et.</span>
+          </h2>
+          <p style={{ fontSize: '1.2rem', opacity: '0.8', maxWidth: '400px', lineHeight: '1.6' }}>
+            Spor salonuna gitmene gerek yok. Yapay zeka ile her yer senin kişisel spor alanın.
+          </p>
         </div>
-        
+      </div>
 
-
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div className="input-group">
-            <label className="input-label">Username</label>
-            <div style={{ position: 'relative' }}>
-              <User size={20} style={{ position: 'absolute', left: '16px', top: '16px', color: 'var(--text-muted)' }} />
-              <input 
-                type="text" 
-                name="username"
-                className="input-field" 
-                style={{ width: '100%', paddingLeft: '48px' }}
-                placeholder="Choose a username"
-                value={formData.username}
-                onChange={handleChange}
-                required
-              />
-            </div>
+      {/* Sağ Taraf: Form */}
+      <div className="split-right">
+        <div className="auth-form-container animate-fade-in">
+          <div style={{ marginBottom: '40px' }}>
+            <h1>Kayıt Ol</h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Saniyeler içinde hesabını oluştur.</p>
           </div>
-
-          <div className="input-group">
-            <label className="input-label">Email</label>
-            <div style={{ position: 'relative' }}>
-              <Mail size={20} style={{ position: 'absolute', left: '16px', top: '16px', color: 'var(--text-muted)' }} />
-              <input 
-                type="email" 
-                name="email"
-                className="input-field" 
-                style={{ width: '100%', paddingLeft: '48px' }}
-                placeholder="Enter your email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
+          
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="input-group">
+              <label className="input-label">Kullanıcı Adı</label>
+              <div style={{ position: 'relative' }}>
+                <User size={20} style={{ position: 'absolute', left: '16px', top: '16px', color: 'var(--text-muted)' }} />
+                <input 
+                  type="text" 
+                  name="username"
+                  className="input-field" 
+                  style={{ width: '100%', paddingLeft: '48px', paddingRight: '20px' }}
+                  placeholder="Bir kullanıcı adı seç"
+                  value={formData.username}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="input-group" style={{ marginBottom: '10px' }}>
-            <label className="input-label">Password</label>
-            <div style={{ position: 'relative' }}>
-              <Lock size={20} style={{ position: 'absolute', left: '16px', top: '16px', color: 'var(--text-muted)' }} />
-              <input 
-                type="password" 
-                name="password"
-                className="input-field" 
-                style={{ width: '100%', paddingLeft: '48px' }}
-                placeholder="Create a strong password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
+            <div className="input-group">
+              <label className="input-label">E-posta</label>
+              <div style={{ position: 'relative' }}>
+                <Mail size={20} style={{ position: 'absolute', left: '16px', top: '16px', color: 'var(--text-muted)' }} />
+                <input 
+                  type="email" 
+                  name="email"
+                  className="input-field" 
+                  style={{ width: '100%', paddingLeft: '48px', paddingRight: '20px' }}
+                  placeholder="E-posta adresini gir"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
             </div>
+
+            <div className="input-group" style={{ marginBottom: '10px' }}>
+              <label className="input-label">Şifre</label>
+              <div style={{ position: 'relative' }}>
+                <Lock size={20} style={{ position: 'absolute', left: '16px', top: '16px', color: 'var(--text-muted)' }} />
+                <input 
+                  type="password" 
+                  name="password"
+                  className="input-field" 
+                  style={{ width: '100%', paddingLeft: '48px', paddingRight: '20px' }}
+                  placeholder="Güçlü bir şifre oluştur"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+
+            <button type="submit" className="btn btn-primary premium-shadow" disabled={loading} style={{ width: '100%', padding: '16px', marginTop: '10px' }}>
+              {loading ? (
+                <div className="spinner" style={{ width: '20px', height: '20px' }}></div>
+              ) : (
+                <>Hesap Oluştur <ChevronRight size={20} /></>
+              )}
+            </button>
+          </form>
+
+          <div style={{ marginTop: '30px', textAlign: 'center', color: 'var(--text-muted)' }}>
+            Zaten hesabın var mı? <Link to="/login" style={{ fontWeight: '600', color: 'var(--primary)', marginLeft: '5px' }}>Giriş Yap</Link>
           </div>
-
-          <button type="submit" className="btn btn-primary mt-2" disabled={loading} style={{ width: '100%', padding: '16px' }}>
-            {loading ? <div className="spinner" style={{ width: '20px', height: '20px' }}></div> : 'Create Account'}
-          </button>
-        </form>
-
-        <div className="text-center mt-4" style={{ marginTop: '24px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-          Already have an account? <Link to="/login" style={{ fontWeight: '600' }}>Sign in</Link>
         </div>
       </div>
     </div>

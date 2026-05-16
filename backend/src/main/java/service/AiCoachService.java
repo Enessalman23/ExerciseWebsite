@@ -20,6 +20,7 @@ public class AiCoachService {
     private final UserMetricsRepository userMetricsRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    @org.springframework.cache.annotation.Cacheable(value = "ai_responses", key = "#user.id + '-' + #userMessage")
     public String getCoachResponse(String userMessage, User user) {
         UserMetrics metrics = userMetricsRepository.findFirstByUserOrderByRecordedAtDesc(user).orElse(null);
         
@@ -34,7 +35,6 @@ public class AiCoachService {
                 "Kullanıcı Profili: \n" +
                 (metrics != null ? 
                   "- Yaş/Boy/Kilo: " + metrics.getAge() + " / " + metrics.getHeight() + "cm / " + metrics.getWeight() + "kg\n" +
-                  "- Vücut Yağ Oranı: %" + metrics.getBodyFat() + "\n" +
                   "- Hedef: " + metrics.getGoal() + "\n" +
                   "- Aktivite Seviyesi: " + metrics.getActivityLevel() + "\n"
                   : "Veri yok.");

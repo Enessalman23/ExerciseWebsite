@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axiosClient from '../api/axiosClient';
-import { Send, User, Bot, Loader2, MessageSquare, Info, Sparkles } from 'lucide-react';
+import { Send, User, Bot, Loader2, MessageSquare, Info, Sparkles, Mic, Volume2, VolumeX } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
 const Coach = () => {
@@ -10,7 +10,62 @@ const Coach = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const [isListening, setIsListening] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const recognitionRef = useRef(null);
   const { showToast } = useToast();
+
+  useEffect(() => {
+    // Initialize Speech Recognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.lang = 'tr-TR';
+      
+      recognitionRef.current.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(prev => prev + " " + transcript);
+      };
+      
+      recognitionRef.current.onerror = (event) => {
+        console.error("Speech recognition error", event.error);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    } else {
+      setInput('');
+      recognitionRef.current?.start();
+      setIsListening(true);
+    }
+  };
+
+  const speak = (text) => {
+    if (!voiceEnabled || !window.speechSynthesis) return;
+    
+    window.speechSynthesis.cancel(); // Cancel any ongoing speech
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'tr-TR';
+    
+    // Try to find a Turkish voice
+    const voices = window.speechSynthesis.getVoices();
+    const trVoice = voices.find(voice => voice.lang.includes('tr'));
+    if (trVoice) {
+      utterance.voice = trVoice;
+    }
+    
+    window.speechSynthesis.speak(utterance);
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -31,7 +86,9 @@ const Coach = () => {
 
     try {
       const res = await axiosClient.post('/api/ai/coach', { message: userMsg });
-      setMessages(prev => [...prev, { role: 'assistant', text: res.data.response }]);
+      const reply = res.data.response;
+      setMessages(prev => [...prev, { role: 'assistant', text: reply }]);
+      speak(reply);
     } catch (err) {
       console.error(err);
       showToast("Bir hata oluştu. Lütfen tekrar dene.", "error");
@@ -145,6 +202,27 @@ const Coach = () => {
               }}
               disabled={isLoading}
             />
+            
+            <button 
+              type="button" 
+              onClick={toggleListening}
+              className={`btn ${isListening ? 'btn-danger' : 'btn-secondary'}`}
+              style={{ width: '50px', height: '50px', padding: 0, borderRadius: '14px', background: isListening ? 'var(--error)' : 'transparent', color: isListening ? 'white' : 'var(--text-muted)', border: 'none' }}
+              title={isListening ? "Dinlemeyi Durdur" : "Sesli Soru Sor"}
+            >
+              <Mic size={20} />
+            </button>
+
+            <button 
+              type="button" 
+              onClick={() => setVoiceEnabled(!voiceEnabled)}
+              className="btn"
+              style={{ width: '50px', height: '50px', padding: 0, borderRadius: '14px', background: voiceEnabled ? 'rgba(79, 70, 229, 0.1)' : 'transparent', color: voiceEnabled ? 'var(--primary)' : 'var(--text-muted)', border: 'none' }}
+              title={voiceEnabled ? "Sesi Kapat" : "Sesi Aç"}
+            >
+              {voiceEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+            </button>
+
             <button 
               type="submit" 
               disabled={!input.trim() || isLoading}

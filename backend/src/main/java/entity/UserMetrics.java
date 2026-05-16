@@ -56,4 +56,15 @@ public class UserMetrics {
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime recordedAt;
+
+    // --- Giyilebilir Teknoloji (Wearable Tech) Hazırlığı ---
+    @Column(columnDefinition = "boolean default false")
+    private Boolean googleFitSynced = false;
+    
+    @Column(columnDefinition = "boolean default false")
+    private Boolean appleHealthSynced = false;
+    
+    // Opsiyonel metrikler
+    private Integer dailyStepCount;
+    private Integer restingHeartRate;
 }

@@ -76,6 +76,7 @@ public class ExerciseService {
         }
     }
 
+    @org.springframework.cache.annotation.Cacheable("exercises")
     public List<ExerciseDataDto> getExercisesByMuscle(String muscleName) {
         if (muscleName == null || muscleName.isEmpty()) return new ArrayList<>();
         String query = muscleName.toLowerCase().trim();
@@ -162,6 +163,8 @@ public class ExerciseService {
             return matchesPrimary || matchesSecondary;
         }).collect(Collectors.toList());
     }
+
+    @org.springframework.cache.annotation.Cacheable("exercises")
     public List<ExerciseDataDto> getWarmupExercises() {
         return exercisesCache.stream().filter(ex -> {
             String cat = ex.getCategory() != null ? ex.getCategory().toLowerCase() : "";

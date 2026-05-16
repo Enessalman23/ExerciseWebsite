@@ -1,0 +1,41 @@
+#! backend-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: backend
+    namespace: egzersiz
+    labels:
+        com.docker.compose.project: egzersiz
+        com.docker.compose.service: backend
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: egzersiz
+            com.docker.compose.service: backend
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: egzersiz
+                com.docker.compose.service: backend
+                com.docker.compose.network.default: "true"
+        spec:
+            containers:
+                - name: fitness-backend
+                  image: egzersiz-backend
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: DB_PASSWORD
+                      value: "1234"
+                    - name: DB_URL
+                      value: "jdbc:postgresql://db:5432/postgres?currentSchema=fitnessai"
+                    - name: DB_USERNAME
+                      value: "postgres"
+                    - name: GEMINI_API_KEY
+                      value: "AIzaSyDCgS7ffzNdDe5lDSxsXFPUixZoUDsaIQM"
+                  ports:
+                    - name: backend-8080
+                      containerPort: 8080
