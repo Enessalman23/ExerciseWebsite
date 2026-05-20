@@ -32,10 +32,10 @@ import BMRCalculator from './pages/BMRCalculator';
 import Coach from './pages/Coach';
 import AiRecipe from './pages/AiRecipe';
 import NutritionJournal from './pages/NutritionJournal';
-import Gamification from './pages/Gamification';
 import ProgressPhotos from './pages/ProgressPhotos';
 import AiPoseCoach from './pages/AiPoseCoach';
 import Layout from './components/Layout';
+import AchievementSystem from './components/AchievementSystem';
 
 import { ToastProvider } from './context/ToastContext';
 
@@ -46,6 +46,7 @@ function App() {
 
   return (
     <ToastProvider>
+        <AchievementSystem />
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -60,7 +61,6 @@ function App() {
               <Route path="/coach" element={<Coach />} />
               <Route path="/recipe" element={<AiRecipe />} />
               <Route path="/journal" element={<NutritionJournal />} />
-              <Route path="/gamification" element={<Gamification />} />
               <Route path="/progress-photos" element={<ProgressPhotos />} />
               <Route path="/ai-pose-coach" element={<AiPoseCoach />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />

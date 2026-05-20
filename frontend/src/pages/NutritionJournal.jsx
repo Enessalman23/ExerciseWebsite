@@ -123,19 +123,45 @@ const NutritionJournal = () => {
 
   return (
     <div className="container" style={{ paddingTop: '40px', paddingBottom: '80px', maxWidth: '1200px' }}>
-      <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 800, margin: 0 }}>Beslenme Günlüğü</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginTop: '5px' }}>Günlük makrolarını takip et, hedefine ulaş.</p>
+      {/* HERO SECTION */}
+      <header className="premium-glass-dark premium-shadow" style={{ 
+        position: 'relative', overflow: 'hidden', borderRadius: '30px', padding: '50px 40px', marginBottom: '50px',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center'
+      }}>
+        {/* Background Image inside Hero */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: -2,
+          backgroundImage: 'url("https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=2053&auto=format&fit=crop")',
+          backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.3
+        }}></div>
+        {/* Gradient Overlay */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: -1,
+          background: 'linear-gradient(to bottom, rgba(15,23,42,0.8) 0%, rgba(15,23,42,0.95) 100%)'
+        }}></div>
+
+        <div className="animate-fade-in" style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.1)', padding: '12px', borderRadius: '50%', marginBottom: '20px', backdropFilter: 'blur(10px)' }}>
+            <Apple size={32} color="var(--primary)" />
+          </div>
+          
+          <h1 className="text-glow" style={{ fontSize: '3rem', fontWeight: 900, margin: 0, color: '#fff', letterSpacing: '-1px' }}>
+            Beslenme <span className="text-glow-primary" style={{ color: 'var(--primary)' }}>Günlüğü</span>
+          </h1>
+          
+          <p style={{ color: '#cbd5e1', fontSize: '1.2rem', maxWidth: '600px', lineHeight: '1.6', marginTop: '15px', marginBottom: '25px' }}>
+            Günlük makrolarını takip et, hedefine ulaş. Her öğün seni zirveye bir adım daha yaklaştırır.
+          </p>
+
+          <button 
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="btn btn-primary"
+            style={{ height: '54px', padding: '0 30px', borderRadius: '16px', fontSize: '1.1rem', boxShadow: '0 10px 20px var(--primary-glow)' }}
+          >
+            <Plus size={20} /> 
+            {showAddForm ? "Vazgeç" : "Öğün Ekle"}
+          </button>
         </div>
-        <button 
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="btn btn-primary"
-          style={{ height: '54px', padding: '0 30px', borderRadius: '16px' }}
-        >
-          <Plus size={20} /> 
-          {showAddForm ? "Vazgeç" : "Öğün Ekle"}
-        </button>
       </header>
 
       <NutritionAnalysisForm 

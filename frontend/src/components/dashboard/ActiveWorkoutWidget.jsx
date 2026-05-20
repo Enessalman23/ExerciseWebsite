@@ -4,21 +4,37 @@ import { Link } from 'react-router-dom';
 
 const ActiveWorkoutWidget = ({ latestWorkout }) => {
   return (
-    <div className="glass-panel" style={{ padding: '30px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-        <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><Dumbbell size={22} color="var(--primary)" /> Aktif Program</h3>
-        <Link to="/workouts" style={{ color: 'var(--secondary)', fontSize: '0.9rem', fontWeight: 700 }}>Başlat</Link>
+    <div className="glass-panel animate-fade-in" style={{ padding: '30px', height: '100%', minHeight: '280px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', top: '-10%', right: '-5%', opacity: 0.05, transform: 'rotate(15deg)' }}>
+        <Dumbbell size={180} />
       </div>
+      <header style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '32px', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+        <h3 style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.25rem', margin: 0, fontWeight: 800 }}>
+          <div style={{ background: 'rgba(99, 102, 241, 0.15)', padding: '8px', borderRadius: '10px', color: 'var(--primary)' }}>
+            <Dumbbell size={22} />
+          </div>
+          Aktif Program
+        </h3>
+        <Link to="/workouts" className="btn btn-primary" style={{ padding: '8px 16px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 700 }}>BAŞLAT</Link>
+      </header>
+
       {latestWorkout ? (
-        <div>
-          <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>AI Program {latestWorkout.id}</div>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Haftalık disiplinine devam et!</p>
-          <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-              <span className="workout-badge workout-badge-secondary">Hazır</span>
-              <span className="workout-badge workout-badge-primary">Sıradaki: Göğüs</span>
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>MEVCUT PLAN</div>
+          <div className="text-glow" style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-main)', marginBottom: '8px', lineHeight: 1.2 }}>{latestWorkout.planName || `Antrenman #${latestWorkout.workoutPlanId}`}</div>
+          <p style={{ fontSize: '1rem', color: 'var(--text-muted)', marginBottom: '24px', fontWeight: 500 }}>Sınırlarını zorlamak için hazır mısın?</p>
+          
+          <div style={{ display: 'flex', gap: '12px' }}>
+              <div className="workout-badge workout-badge-secondary" style={{ padding: '8px 16px', borderRadius: '12px', fontWeight: 700 }}>HAZIR</div>
+              <div className="workout-badge workout-badge-primary" style={{ padding: '8px 16px', borderRadius: '12px', fontWeight: 700 }}>BUGÜN: FULL BODY</div>
           </div>
         </div>
-      ) : <p style={{ opacity: 0.5 }}>Henüz programın yok.</p>}
+      ) : (
+        <div style={{ textAlign: 'center', padding: '40px 20px', opacity: 0.5 }}>
+           <Dumbbell size={48} style={{ marginBottom: '15px' }} />
+           <p style={{ fontSize: '0.95rem', margin: 0 }}>Henüz aktif bir programın yok.</p>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,7 +1,87 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Model from 'react-body-highlighter';
 import Skeleton from '../Skeleton';
 import { Target, ChevronRight } from 'lucide-react';
+
+const ExerciseDetailView = ({ exercise, onBack, getImageUrl }) => {
+  const images = exercise.images || [];
+  const hasMultipleImages = images.length > 1;
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  useEffect(() => {
+    if (!hasMultipleImages) return;
+    const interval = setInterval(() => {
+      setCurrentImageIndex(prev => (prev === images.length - 1 ? 0 : prev + 1));
+    }, 2000); // 2 seconds
+    return () => clearInterval(interval);
+  }, [hasMultipleImages, images.length]);
+
+  return (
+    <div className="animate-fade-in">
+       <button 
+        onClick={onBack}
+        className="btn btn-secondary"
+        style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px' }}
+       >
+          <ChevronRight size={16} style={{ transform: 'rotate(180deg)' }} /> Listeye Geri Dön
+       </button>
+       
+       <div style={{ background: '#fff', borderRadius: '16px', padding: '20px', marginBottom: '25px', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+          <img 
+            src={getImageUrl(images.length > 0 ? images[currentImageIndex] : exercise.gifUrl)} 
+            alt={exercise.name} 
+            style={{ maxHeight: '250px', maxWidth: '100%', objectFit: 'contain' }}
+          />
+          
+          {hasMultipleImages && (
+            <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+              <button 
+                onClick={() => setCurrentImageIndex(prev => (prev === 0 ? images.length - 1 : prev - 1))}
+                className="btn-secondary" style={{ padding: '4px 8px', borderRadius: '8px' }}
+              >
+                <ChevronRight size={14} style={{ transform: 'rotate(180deg)' }} />
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {images.map((_, idx) => (
+                  <div key={idx} style={{ 
+                    width: '8px', height: '8px', borderRadius: '50%', 
+                    background: idx === currentImageIndex ? 'var(--primary)' : 'rgba(0,0,0,0.1)',
+                    transition: 'all 0.3s'
+                  }} />
+                ))}
+              </div>
+              <button 
+                onClick={() => setCurrentImageIndex(prev => (prev === images.length - 1 ? 0 : prev + 1))}
+                className="btn-secondary" style={{ padding: '4px 8px', borderRadius: '8px' }}
+              >
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          )}
+       </div>
+
+       <h2 style={{ fontSize: '1.8rem', fontWeight: 900, marginBottom: '15px', textTransform: 'capitalize' }}>{exercise.name}</h2>
+       
+       <div style={{ display: 'flex', gap: '10px', marginBottom: '25px' }}>
+          <span className="workout-badge workout-badge-primary">{exercise.targetMuscles?.[0]}</span>
+          <span className="workout-badge workout-badge-secondary">{exercise.equipments?.[0] || 'Vücut Ağırlığı'}</span>
+       </div>
+
+       <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Target size={18} color="var(--primary)" /> Uygulama Talimatları
+       </h3>
+       
+       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {exercise.instructions?.map((step, idx) => (
+            <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', gap: '15px' }}>
+              <div style={{ minWidth: '24px', height: '24px', background: 'var(--primary)', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 800 }}>{idx + 1}</div>
+              <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: 1.5, color: 'var(--text-main)' }}>{step.replace(/Adım:\s*\d+\s*/g, '')}</p>
+            </div>
+          ))}
+       </div>
+    </div>
+  );
+};
 
 const AnatomyExplorer = ({
   viewModel,
@@ -10,9 +90,14 @@ const AnatomyExplorer = ({
   handleMuscleClick,
   fetchingExercises,
   localExercises,
-  setDetailExercise,
   getImageUrl
 }) => {
+  const [detailExerciseLocal, setDetailExerciseLocal] = useState(null);
+
+  useEffect(() => {
+    setDetailExerciseLocal(null);
+  }, [selectedMuscle]);
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: '30px', marginBottom: '40px' }} className="responsive-grid">
       
@@ -51,15 +136,22 @@ const AnatomyExplorer = ({
         </p>
       </div>
 
-      {/* Right: Exercise List */}
-      <div className="glass-panel" style={{ padding: '30px', overflowY: 'auto', maxHeight: '680px' }}>
+      {/* Right: Exercise List OR Detail View */}
+      <div className="glass-panel" style={{ padding: '30px', overflowY: 'auto', maxHeight: '680px', position: 'relative' }}>
         {!selectedMuscle ? (
           <div style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', opacity: 0.3 }}>
              <Target size={80} />
              <h3 style={{ marginTop: '20px' }}>Keşfetmeye Başla</h3>
              <p>Kas haritasından bir bölge seçerek profesyonel hareketleri gör.</p>
           </div>
+        ) : detailExerciseLocal ? (
+          <ExerciseDetailView 
+            exercise={detailExerciseLocal} 
+            onBack={() => setDetailExerciseLocal(null)} 
+            getImageUrl={getImageUrl} 
+          />
         ) : (
+          /* List View */
           <div className="animate-fade-in">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
               <h3 style={{ fontSize: '1.5rem', margin: 0 }}>{selectedMuscle.toUpperCase()} Hareketleri</h3>
@@ -92,7 +184,7 @@ const AnatomyExplorer = ({
                         )}
                      </div>
                      <button 
-                      onClick={() => setDetailExercise(ex)}
+                      onClick={() => setDetailExerciseLocal(ex)}
                       className="btn btn-secondary" 
                       style={{ width: '100%', marginTop: '15px', fontSize: '0.8rem', padding: '8px' }}
                      >

@@ -5,12 +5,14 @@ import Navbar from './Navbar';
 
 const Layout = () => {
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', backgroundColor: 'var(--bg-color)' }}>
+    <div className="main-layout">
       <Sidebar />
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
         <Navbar />
-        <main className="main-content" style={{ flex: 1, overflowY: 'auto', position: 'relative' }}>
-          <Outlet />
+        <main className="content-area custom-scrollbar">
+          <div className="container animate-fade-in">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

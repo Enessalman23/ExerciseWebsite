@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Camera, RefreshCw, Info, AlertTriangle, CheckCircle2, Dumbbell } from 'lucide-react';
+import { Camera, RefreshCw, Info, AlertTriangle, CheckCircle2, Dumbbell, Award, History } from 'lucide-react';
+import { useVoiceGuidance } from '../hooks/useVoiceGuidance';
 
 const AiPoseCoach = () => {
   const videoRef = useRef(null);
@@ -13,6 +14,8 @@ const AiPoseCoach = () => {
   // Exercise Selection & State
   const [activeExercise, setActiveExercise] = useState('squat'); // squat, pushup, situp
   const [movementState, setMovementState] = useState('up'); // 'up' or 'down'
+  const [sessionSummary, setSessionSummary] = useState(null);
+  const { speak } = useVoiceGuidance();
 
   useEffect(() => {
     return () => {
@@ -26,6 +29,14 @@ const AiPoseCoach = () => {
       tracks.forEach(track => track.stop());
     }
     setIsCameraActive(false);
+    if (reps > 0) {
+      setSessionSummary({
+        exercise: activeExercise,
+        reps: reps,
+        time: new Date().toLocaleTimeString()
+      });
+      speak(`Seans bitti. ${reps} tekrar yaptın. Harika iş!`);
+    }
   };
 
   // Ref for handling stale closures in MediaPipe callbacks
@@ -73,7 +84,11 @@ const AiPoseCoach = () => {
     const now = Date.now();
     // 800ms cooldown prevent double counts from micro-movements
     if (now - stateRef.current.lastRepTime > 800) {
-      setReps(prev => prev + 1);
+      setReps(prev => {
+        const newReps = prev + 1;
+        if (newReps % 5 === 0) speak(`${newReps} tekrar oldu, harika gidiyorsun!`);
+        return newReps;
+      });
       stateRef.current.lastRepTime = now;
     }
   };
@@ -186,14 +201,14 @@ const AiPoseCoach = () => {
     const angle = getSmoothedAngle(rawAngle);
     const mState = stateRef.current.movementState;
     
-    // Nizami squat eşikleri
-    if (angle > 160) {
+    // Nizami squat eşikleri (Daha dar aralık: >165 ve <85)
+    if (angle > 165) {
       if (mState === 'down') {
         registerRep();
         stateRef.current.movementState = 'up';
       }
       setFeedback("Pozisyon iyi, aşağı çökebilirsin.");
-    } else if (angle < 95) {
+    } else if (angle < 85) {
       if (mState === 'up') {
         stateRef.current.movementState = 'down';
       }
@@ -220,14 +235,14 @@ const AiPoseCoach = () => {
     const angle = getSmoothedAngle(rawAngle);
     const mState = stateRef.current.movementState;
     
-    // Nizami şınav eşikleri
-    if (angle > 160) {
+    // Nizami şınav eşikleri (Daha dar aralık: >165 ve <80)
+    if (angle > 165) {
       if (mState === 'down') {
         registerRep();
         stateRef.current.movementState = 'up';
       }
       setFeedback("Gövdeni yere doğru indir.");
-    } else if (angle < 90) {
+    } else if (angle < 80) {
       if (mState === 'up') {
         stateRef.current.movementState = 'down';
       }
@@ -237,11 +252,45 @@ const AiPoseCoach = () => {
     }
   };
 
-  
+  // --- SIT-UP (MEKİK) ALGORITHM ---
+  const analyzeSitup = (landmarks) => {
+    // Shoulder, Hip, Knee
+    const indices = getBestSide(landmarks, [11, 23, 25], [12, 24, 26]); 
+
+    if (!indices) {
+       setFeedback("Gövdenizin ve dizlerinizin kamerada göründüğünden emin olun.");
+       return;
+    }
+
+    const shoulder = landmarks[indices[0]];
+    const hip = landmarks[indices[1]];
+    const knee = landmarks[indices[2]];
+
+    const rawAngle = calculateAngle(shoulder, hip, knee);
+    const angle = getSmoothedAngle(rawAngle);
+    const mState = stateRef.current.movementState;
+    
+    // Nizami mekik eşikleri
+    if (angle > 130) {
+      if (mState === 'up') {
+        registerRep();
+        stateRef.current.movementState = 'down';
+      }
+      setFeedback("Geriye doğru yat.");
+    } else if (angle < 60) {
+      if (mState === 'down') {
+        stateRef.current.movementState = 'up';
+      }
+      setFeedback("Harika! Şimdi yavaşça yat.");
+    } else {
+      setFeedback(mState === 'down' ? "Yukarı kalk..." : "Aşağı in...");
+    }
+  };
 
   const exerciseTips = {
-    squat: "Tüm vücudunuzun (özellikle dizlerinizin ve kalçanızın) kamerada göründüğünden emin olun. Analiz sol bacak açılarına göre yapılmaktadır.",
-    pushup: "Kamerayı profilden (yandan) görecek şekilde yere koyun. Şınav sırasında kollarınızın (omuz, dirsek, bilek) net görünmesi gerekir.",
+    squat: "Tam derinlik için kalçanızın diz hizanızın altına indiğinden emin olun. (Diz açısı < 85°)",
+    pushup: "Göğsünüzün yere iyice yaklaştığından ve kollarınızın tam açıldığından emin olun.",
+    situp: "Sırtınızın yere değdiğinden ve kalkarken dizlerinize yaklaştığınızdan emin olun.",
   };
 
   return (
@@ -259,14 +308,14 @@ const AiPoseCoach = () => {
 
       {/* Exercise Selector */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '30px', overflowX: 'auto', paddingBottom: '10px' }}>
-        {['squat', 'pushup'].map((ex) => (
+        {['squat', 'pushup', 'situp'].map((ex) => (
           <button 
             key={ex}
             onClick={() => handleExerciseChange(ex)}
             className={`btn ${activeExercise === ex ? 'btn-primary premium-shadow' : 'btn-secondary'}`}
             style={{ minWidth: '120px', textTransform: 'capitalize' }}
           >
-            <Dumbbell size={16} /> {ex === 'pushup' ? 'Şınav' : 'Squat'}
+            <Dumbbell size={16} /> {ex === 'pushup' ? 'Şınav' : ex === 'situp' ? 'Mekik' : 'Squat'}
           </button>
         ))}
       </div>
@@ -321,13 +370,32 @@ const AiPoseCoach = () => {
                </button>
             </div>
           )}
+
+          {(!isCameraActive && sessionSummary) && (
+            <div className="animate-slide-up" style={{ position: 'absolute', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(2, 6, 23, 0.9)', zIndex: 10 }}>
+               <div className="premium-glass-dark" style={{ padding: '40px', borderRadius: '32px', textAlign: 'center', border: '2px solid var(--primary)', maxWidth: '400px' }}>
+                  <div style={{ background: 'var(--primary)', width: '80px', height: '80px', borderRadius: '50%', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 30px var(--primary-glow)' }}>
+                     <Award size={40} color="#fff" />
+                  </div>
+                  <h2 style={{ fontSize: '1.8rem', fontWeight: 900, marginBottom: '10px' }}>Seans Tamamlandı!</h2>
+                  <div style={{ fontSize: '1.1rem', opacity: 0.8, marginBottom: '30px' }}>
+                     <span style={{ textTransform: 'capitalize', color: 'var(--primary)', fontWeight: 800 }}>{sessionSummary.exercise}</span> seansında 
+                     <span style={{ fontSize: '2rem', display: 'block', fontWeight: 900, color: '#fff', margin: '10px 0' }}>{sessionSummary.reps} Tekrar</span>
+                     yaptın.
+                  </div>
+                  <button onClick={() => { setSessionSummary(null); setReps(0); }} className="btn btn-primary" style={{ width: '100%' }}>
+                     Yeni Seans Başlat
+                  </button>
+               </div>
+            </div>
+          )}
         </div>
 
         {/* Feedback Area */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div className="glass-panel" style={{ padding: '30px', textAlign: 'center', background: 'linear-gradient(135deg, rgba(79,70,229,0.1), rgba(14,165,233,0.1))' }}>
             <h3 style={{ fontSize: '1rem', color: 'var(--text-muted)', marginBottom: '10px', textTransform: 'capitalize' }}>
-               {activeExercise === 'pushup' ? 'Şınav' : 'Squat'} Sayacı
+               {activeExercise === 'pushup' ? 'Şınav' : activeExercise === 'situp' ? 'Mekik' : 'Squat'} Sayacı
             </h3>
             <div style={{ fontSize: '4rem', fontWeight: 900, color: 'var(--text-main)', lineHeight: 1 }}>
               {reps}

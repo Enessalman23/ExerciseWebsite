@@ -83,21 +83,36 @@ const Diet = () => {
 
 
   return (
-    <div className="container" style={{ paddingTop: '40px', paddingBottom: '40px', maxWidth: '1200px' }}>
-      <header className="flex justify-between items-center" style={{ marginBottom: '40px' }}>
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate('/dashboard')} className="btn btn-secondary" style={{ padding: '8px 12px' }}>
-            &larr; Geri
+    <div className="container" style={{ paddingTop: '50px', paddingBottom: '80px', maxWidth: '1200px' }}>
+      <header className="flex justify-between items-center" style={{ marginBottom: '50px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <button onClick={() => navigate('/dashboard')} className="btn-secondary" style={{ width: '45px', height: '45px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            &larr;
           </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ background: 'var(--primary)', padding: '10px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Apple size={28} color="#fff" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ 
+              background: 'linear-gradient(135deg, var(--primary), var(--secondary))', 
+              padding: '12px', 
+              borderRadius: '16px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              boxShadow: '0 10px 20px var(--primary-glow)'
+            }}>
+                <Apple size={32} color="#fff" />
             </div>
-            <h1 style={{ fontSize: '2rem', margin: 0 }}>Beslenme Planı</h1>
+            <div>
+              <h1 className="text-glow" style={{ fontSize: '2.5rem', margin: 0, fontWeight: 800 }}>Beslenme Planı</h1>
+              <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.95rem' }}>Hedeflerine uygun, yapay zeka tarafından hazırlanan menüler</p>
+            </div>
           </div>
         </div>
         {!showForm && (
-          <button onClick={() => setShowForm(true)} className="btn btn-primary" style={{ boxShadow: '0 4px 15px rgba(79, 70, 229, 0.4)' }}>
+          <button 
+            onClick={() => setShowForm(true)} 
+            className="btn btn-primary premium-shadow" 
+            style={{ padding: '14px 24px', fontSize: '1rem' }}
+          >
             <Plus size={20} /> Yeni Plan Oluştur
           </button>
         )}

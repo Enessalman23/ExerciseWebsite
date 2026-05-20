@@ -83,13 +83,35 @@ const ProgressPhotos = () => {
   return (
     <div className="container" style={{ paddingTop: '40px', paddingBottom: '80px', maxWidth: '1000px' }}>
       
-      <header style={{ marginBottom: '40px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-        <div style={{ background: 'var(--primary)', padding: '12px', borderRadius: '15px', color: '#fff' }}>
-          <Camera size={28} />
-        </div>
-        <div>
-          <h1 style={{ fontSize: '2rem', margin: 0 }}>Gelişim Fotoğrafları</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>Fiziksel değişimini görsel olarak takip et.</p>
+      {/* HERO SECTION */}
+      <header className="premium-glass-dark premium-shadow" style={{ 
+        position: 'relative', overflow: 'hidden', borderRadius: '30px', padding: '50px 40px', marginBottom: '50px',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center'
+      }}>
+        {/* Background Image inside Hero */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: -2,
+          backgroundImage: 'url("https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=2070&auto=format&fit=crop")',
+          backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.3
+        }}></div>
+        {/* Gradient Overlay */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: -1,
+          background: 'linear-gradient(to bottom, rgba(15,23,42,0.8) 0%, rgba(15,23,42,0.95) 100%)'
+        }}></div>
+
+        <div className="animate-fade-in" style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.1)', padding: '12px', borderRadius: '50%', marginBottom: '20px', backdropFilter: 'blur(10px)' }}>
+            <Camera size={32} color="var(--primary)" />
+          </div>
+          
+          <h1 className="text-glow" style={{ fontSize: '3rem', fontWeight: 900, margin: 0, color: '#fff', letterSpacing: '-1px' }}>
+            Gelişim <span className="text-glow-primary" style={{ color: 'var(--primary)' }}>Fotoğrafları</span>
+          </h1>
+          
+          <p style={{ color: '#cbd5e1', fontSize: '1.2rem', maxWidth: '600px', lineHeight: '1.6', marginTop: '15px' }}>
+            Fiziksel değişimini görsel olarak takip et. Emeklerinin karşılığını kendi gözlerinle gör.
+          </p>
         </div>
       </header>
 

@@ -37,15 +37,43 @@ const Gamification = () => {
   }
 
   return (
-    <div className="container" style={{ paddingTop: '40px', paddingBottom: '80px', maxWidth: '1000px' }}>
+    <div className="container" style={{ paddingTop: '50px', paddingBottom: '80px', maxWidth: '1000px' }}>
       
-      <header style={{ marginBottom: '40px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-        <div style={{ background: 'var(--primary)', padding: '12px', borderRadius: '15px', color: '#fff' }}>
-          <Trophy size={28} />
-        </div>
-        <div>
-          <h1 style={{ fontSize: '2rem', margin: 0 }}>Başarımlar & Liderlik</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>Puan topla, rozetleri aç ve zirveye yerleş.</p>
+      {/* HERO SECTION */}
+      <header className="premium-glass-dark premium-shadow" style={{ 
+        position: 'relative', overflow: 'hidden', borderRadius: '32px', padding: '60px 40px', marginBottom: '50px',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)'
+      }}>
+        {/* Background Image inside Hero */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: -2,
+          backgroundImage: 'url("https://images.unsplash.com/photo-1552674605-db6ffd4facb5?q=80&w=2070&auto=format&fit=crop")',
+          backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.2
+        }}></div>
+        {/* Gradient Overlay */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: -1,
+          background: 'linear-gradient(to bottom, rgba(9,9,11,0.85) 0%, rgba(9,9,11,0.95) 100%)'
+        }}></div>
+
+        <div className="animate-fade-in" style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ 
+            display: 'inline-flex', alignItems: 'center', gap: '10px', 
+            background: 'linear-gradient(135deg, var(--primary), var(--secondary))', 
+            padding: '16px', borderRadius: '20px', marginBottom: '24px', 
+            boxShadow: '0 10px 25px var(--primary-glow)' 
+          }}>
+            <Trophy size={32} color="#fff" />
+          </div>
+          
+          <h1 className="text-glow" style={{ fontSize: '3rem', fontWeight: 900, margin: 0, color: '#fff', letterSpacing: '-1.5px' }}>
+            Başarımlar & <span className="text-glow-primary" style={{ color: 'var(--primary)' }}>Liderlik</span>
+          </h1>
+          <div style={{ width: '60px', height: '4px', background: 'var(--primary)', borderRadius: '2px', margin: '20px auto' }}></div>
+          
+          <p style={{ color: '#94a3b8', fontSize: '1.2rem', maxWidth: '600px', lineHeight: '1.6', margin: '0 auto' }}>
+            Puan topla, rozetleri aç ve zirveye yerleş. Gerçek rekabet şimdi başlıyor.
+          </p>
         </div>
       </header>
 

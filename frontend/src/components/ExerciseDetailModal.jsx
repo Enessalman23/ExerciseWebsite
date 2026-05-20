@@ -30,151 +30,132 @@ const ExerciseDetailModal = ({ exercise, onClose }) => {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div 
-        className="modal-content glass-panel animate-fade-in" 
+        className="modal-content animate-fade-in" 
         onClick={e => e.stopPropagation()}
         style={{ 
-          maxWidth: '800px', 
+          maxWidth: '750px', 
+          width: '90%',
           padding: 0, 
           overflow: 'hidden',
           background: 'var(--bg-color)',
-          border: '1px solid var(--border-color)'
         }}
       >
-        {/* Header Image/GIF */}
-        <div style={{ 
-          width: '100%', 
-          height: '350px', 
-          background: '#fff', 
-          position: 'relative',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          borderBottom: '1px solid var(--border-color)'
-        }}>
-          {images.length > 0 || exercise.gifUrl ? (
-            <img 
-              src={images.length > 0 ? getImageUrl(images[currentImageIndex]) : getImageUrl(exercise.gifUrl)} 
-              alt={exercise.name}
-              style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain', padding: '20px' }}
-            />
-          ) : (
-            <Dumbbell size={80} color="var(--primary)" style={{ opacity: 0.2 }} />
-          )}
-          
-          {hasMultipleImages && (
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {/* Top Section: Visuals and Header */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', minHeight: '320px' }} className="responsive-grid">
+            {/* Visual Column */}
             <div style={{ 
-              position: 'absolute', 
-              bottom: '20px', 
-              display: 'flex', 
-              gap: '8px' 
-            }}>
-              {images.map((_, idx) => (
-                <div key={idx} style={{ 
-                  width: '8px', 
-                  height: '8px', 
-                  borderRadius: '50%', 
-                  background: idx === currentImageIndex ? 'var(--primary)' : 'rgba(0,0,0,0.1)',
-                  transition: 'all 0.3s'
-                }} />
-              ))}
-            </div>
-          )}
-
-          <button 
-            onClick={onClose}
-            style={{ 
-              position: 'absolute', 
-              top: '20px', 
-              right: '20px', 
-              background: 'rgba(0,0,0,0.5)', 
-              border: 'none', 
-              color: '#fff', 
-              width: '40px', 
-              height: '40px', 
-              borderRadius: '50%', 
-              cursor: 'pointer',
-              display: 'flex', 
-              alignItems: 'center', 
+              background: '#fff', 
+              position: 'relative',
+              display: 'flex',
               justifyContent: 'center',
-              backdropFilter: 'blur(10px)',
-              zIndex: 10
-            }}
-          >
-            <X size={24} />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div style={{ padding: '40px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px' }}>
-            <div>
-              <h2 style={{ fontSize: '2rem', marginBottom: '10px', textTransform: 'capitalize', color: 'var(--text-main)' }}>{exercise.name}</h2>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <span className="workout-badge workout-badge-primary">
-                  <Target size={14} style={{ marginRight: '6px' }} /> {exercise.targetMuscles?.[0] || 'Genel'}
-                </span>
-                <span className="workout-badge workout-badge-secondary">
-                  <Dumbbell size={14} style={{ marginRight: '6px' }} /> {exercise.equipments?.[0] || 'Ekipman Gerekmiyor'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '30px' }}>
-            <div>
-              <h3 style={{ fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-                <ListOrdered size={20} color="var(--primary)" /> Adım Adım Uygulama
-              </h3>
+              alignItems: 'center',
+              padding: '20px'
+            }}>
+              {images.length > 0 || exercise.gifUrl ? (
+                <img 
+                  src={images.length > 0 ? getImageUrl(images[currentImageIndex]) : getImageUrl(exercise.gifUrl)} 
+                  alt={exercise.name}
+                  style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
+                />
+              ) : (
+                <Dumbbell size={100} color="var(--primary)" style={{ opacity: 0.1 }} />
+              )}
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '300px', overflowY: 'auto', paddingRight: '10px' }}>
-                {exercise.instructions && exercise.instructions.length > 0 ? (
-                  exercise.instructions.map((step, idx) => (
+              {hasMultipleImages && (
+                <div style={{ position: 'absolute', bottom: '20px', display: 'flex', gap: '8px' }}>
+                  {images.map((_, idx) => (
                     <div key={idx} style={{ 
-                      display: 'flex', 
-                      gap: '15px', 
-                      background: 'var(--surface-hover)', 
-                      padding: '16px', 
-                      borderRadius: '12px',
-                      border: '1px solid var(--border-color)',
-                      transition: 'transform 0.2s',
-                    }} className="hover-scale">
-                      <div style={{ 
-                        minWidth: '28px', 
-                        height: '28px', 
-                        background: 'var(--primary)', 
-                        color: '#fff', 
-                        borderRadius: '50%', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center',
-                        fontSize: '0.85rem',
-                        fontWeight: 700,
-                        marginTop: '2px'
-                      }}>
-                        {idx + 1}
-                      </div>
-                      <p style={{ margin: 0, fontSize: '1rem', lineHeight: 1.6, color: 'var(--text-main)' }}>
-                        {step.replace(/Adım:\s*\d+\s*/g, '').replace(/Step:\s*\d+\s*/g, '')}
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>Talimat bulunamadı.</p>
-                )}
+                      width: '10px', height: '4px', borderRadius: '2px', 
+                      background: idx === currentImageIndex ? 'var(--primary)' : 'rgba(0,0,0,0.1)',
+                      transition: 'all 0.3s'
+                    }} />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Info Column */}
+            <div style={{ padding: '30px', background: 'rgba(255,255,255,0.02)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div style={{ marginBottom: '15px' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>HAREKET DETAYI</span>
+                <h2 style={{ fontSize: '1.8rem', fontWeight: 900, margin: '6px 0', textTransform: 'capitalize', color: 'var(--text-main)', lineHeight: 1.1 }}>{exercise.name}</h2>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                  <Target size={18} color="var(--primary)" />
+                  <div>
+                     <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700 }}>HEDEF KAS</div>
+                     <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>{exercise.targetMuscles?.[0] || 'Genel'}</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                  <Dumbbell size={18} color="var(--secondary)" />
+                  <div>
+                     <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700 }}>EKİPMAN</div>
+                     <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>{exercise.equipments?.[0] || 'Vücut Ağırlığı'}</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div style={{ marginTop: '40px', paddingTop: '30px', borderTop: '1px solid var(--border-color)' }}>
+          {/* Bottom Section: Instructions */}
+          <div style={{ padding: '40px', borderTop: '1px solid var(--border-color)' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <ListOrdered size={22} color="var(--primary)" /> Uygulama Talimatları
+            </h3>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
+              {exercise.instructions && exercise.instructions.length > 0 ? (
+                exercise.instructions.map((step, idx) => (
+                  <div key={idx} className="glass-panel" style={{ 
+                    display: 'flex', gap: '20px', padding: '16px 20px', borderRadius: '16px', 
+                    background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border-color)'
+                  }}>
+                    <div style={{ 
+                      minWidth: '32px', height: '32px', background: 'var(--primary)', color: '#fff', 
+                      borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '0.9rem', fontWeight: 800, flexShrink: 0
+                    }}>
+                      {idx + 1}
+                    </div>
+                    <p style={{ margin: 0, fontSize: '1rem', lineHeight: 1.6, color: 'var(--text-main)' }}>
+                      {step.replace(/Adım:\s*\d+\s*/g, '').replace(/Step:\s*\d+\s*/g, '')}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div style={{ textAlign: 'center', padding: '40px', opacity: 0.5 }}>
+                  <Info size={40} style={{ marginBottom: '10px' }} />
+                  <p>Bu hareket için henüz talimat eklenmemiş.</p>
+                </div>
+              )}
+            </div>
+
             <button 
               onClick={onClose} 
-              className="btn btn-primary" 
-              style={{ width: '100%', height: '56px', fontSize: '1.1rem' }}
+              className="btn btn-primary premium-shadow" 
+              style={{ width: '100%', marginTop: '40px', padding: '18px', fontSize: '1.1rem', fontWeight: 800 }}
             >
-              Anladım, Teşekkürler!
+              Kapat
             </button>
           </div>
         </div>
+
+        {/* Floating Close Button */}
+        <button 
+          onClick={onClose}
+          style={{ 
+            position: 'absolute', top: '20px', right: '20px', background: 'rgba(0,0,0,0.5)', 
+            border: 'none', color: '#fff', width: '44px', height: '44px', borderRadius: '14px', 
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            backdropFilter: 'blur(10px)', zIndex: 100
+          }}
+        >
+          <X size={24} />
+        </button>
       </div>
     </div>
   );

@@ -18,87 +18,88 @@ const Navbar = () => {
 
   return (
     <div className="navbar" style={{
-      height: '80px',
-      background: 'var(--surface-color)',
-      borderBottom: '1px solid var(--border-color)',
+      height: '70px',
+      background: 'transparent',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: '0 40px',
-      position: 'sticky',
-      top: 0,
+      position: 'relative',
       zIndex: 10
     }}>
       <div>
         {/* Placeholder for left side elements like breadcrumbs if needed */}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         <button 
            onClick={toggleTheme}
+           className="btn-secondary"
            style={{ 
-             background: 'var(--surface-hover)', 
-             border: 'none', 
-             color: 'var(--text-main)', 
-             padding: '8px', 
-             borderRadius: '50%', 
-             cursor: 'pointer',
-             display: 'flex',
-             alignItems: 'center',
-             justifyContent: 'center',
-             transition: 'var(--transition)'
+             width: '40px',
+             height: '40px',
+             padding: '0',
+             borderRadius: '12px',
            }}
            title={isDark ? "Aydınlık Moda Geç" : "Karanlık Moda Geç"}
         >
-          {isDark ? <Sun size={20} /> : <Moon size={20} />}
+          {isDark ? <Sun size={18} /> : <Moon size={18} />}
         </button>
         
-          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(79, 70, 229, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'var(--primary)' }}>
-            <User size={20} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-main)' }}>{user?.username || 'Kullanıcı'}</span>
-          </div>
+        {/* Language Toggle */}
+        <button 
+          onClick={() => {
+            import('i18next').then(i18n => {
+              i18n.default.changeLanguage(i18n.default.language === 'tr' ? 'en' : 'tr');
+            });
+          }}
+          className="btn-secondary"
+          style={{ 
+            padding: '8px 12px', 
+            borderRadius: '12px', 
+            fontSize: '0.8rem',
+            fontWeight: '700'
+          }}
+        >
+          TR/EN
+        </button>
 
-          {/* Language Toggle */}
-          <button 
-           onClick={() => {
-             import('i18next').then(i18n => {
-               i18n.default.changeLanguage(i18n.default.language === 'tr' ? 'en' : 'tr');
-             });
-           }}
-           style={{ 
-             background: 'var(--surface-hover)', 
-             border: '1px solid var(--border-color)', 
-             color: 'var(--text-main)', 
-             padding: '4px 8px', 
-             borderRadius: '8px', 
-             cursor: 'pointer',
-             fontWeight: '600',
-             transition: 'var(--transition)'
-           }}
-          >
-            EN/TR
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(255,255,255,0.03)', padding: '6px 16px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+          <div style={{ 
+            width: '32px', 
+            height: '32px', 
+            borderRadius: '10px', 
+            background: 'linear-gradient(135deg, var(--primary), var(--secondary))', 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            color: '#fff',
+            boxShadow: '0 4px 10px var(--primary-glow)'
+          }}>
+            <User size={16} />
+          </div>
+          <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-main)' }}>{user?.username || 'Kullanıcı'}</span>
+        </div>
 
         <button 
           onClick={handleLogout} 
           style={{ 
-            background: 'rgba(239, 68, 68, 0.05)', 
-            border: '1px solid rgba(239, 68, 68, 0.1)', 
-            color: 'var(--error)', 
+            background: 'rgba(244, 63, 94, 0.1)', 
+            border: '1px solid rgba(244, 63, 94, 0.2)', 
+            color: '#f43f5e', 
             display: 'flex', 
             alignItems: 'center', 
             gap: '8px', 
-            padding: '8px 16px', 
-            borderRadius: '12px', 
+            padding: '10px 18px', 
+            borderRadius: '14px', 
             cursor: 'pointer',
-            marginLeft: '12px',
-            fontWeight: '500',
-            transition: 'all 0.2s'
+            fontSize: '0.9rem',
+            fontWeight: '600',
+            transition: 'var(--transition)'
           }}
+          className="hover-glow-error"
         >
-          <LogOut size={16} /> Çıkış Yap
+          <LogOut size={16} /> Çıkış
         </button>
       </div>
     </div>

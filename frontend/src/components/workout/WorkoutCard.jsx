@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  Award, PlayCircle, ChevronDown, ChevronUp, Trash2, Calendar, Layout, ArrowUpRight, CheckCircle2 
+  Award, PlayCircle, ChevronDown, ChevronUp, Trash2, Calendar, Layout, ArrowUpRight, CheckCircle2, Activity
 } from 'lucide-react';
 
 const WorkoutCard = ({ 
@@ -17,55 +17,93 @@ const WorkoutCard = ({
   
   return (
     <div 
-       className={`workout-card animate-fade-in ${isExpanded ? 'expanded' : ''}`}
+       className={`workout-card animate-fade-in hover-glow ${isExpanded ? 'expanded' : ''}`}
        style={{ 
          borderLeft: idx === 0 ? '6px solid var(--primary)' : '1px solid var(--border-color)',
-         animationDelay: `${idx * 0.1}s`
+         animationDelay: `${idx * 0.1}s`,
+         background: 'var(--surface-color)',
+         borderRadius: '24px',
+         marginBottom: '16px'
        }}
      >
-      <div className="flex items-center justify-between" style={{ padding: '28px' }}>
-         <div style={{ flex: 1, display: 'flex', gap: '20px', alignItems: 'center' }}>
-            <div className="glass-panel" style={{ width: '64px', height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.03)', borderRadius: '16px' }}>
-               <Award size={32} color={idx === 0 ? 'var(--primary)' : 'var(--text-muted)'} />
+      <div className="flex items-center justify-between" style={{ padding: '32px 40px' }}>
+         <div style={{ flex: 1, display: 'flex', gap: '32px', alignItems: 'center' }}>
+            <div className="glass-panel" style={{ 
+              width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+              background: idx === 0 ? 'var(--primary)' : 'rgba(255,255,255,0.03)', 
+              borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)',
+              boxShadow: idx === 0 ? '0 15px 30px var(--primary-glow)' : 'none'
+            }}>
+               <Award size={idx === 0 ? 40 : 32} color={idx === 0 ? '#fff' : 'var(--text-muted)'} className={idx === 0 ? 'floating' : ''} />
             </div>
             <div style={{ flex: 1 }}>
                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{new Date().toLocaleDateString('tr-TR')}</span>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: idx === 0 ? 'var(--success)' : 'var(--text-muted)' }}></div>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>
+                    {(() => {
+                      const d = new Date(item.createdAt);
+                      return isNaN(d.getTime()) ? 'YENİ SİSTEM' : d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+                    })()}
+                  </span>
                </div>
-               <h3 style={{ fontSize: '1.4rem', margin: '0 0 10px 0' }}>{item.planName}</h3>
-               <div style={{ display: 'flex', gap: '12px' }}>
-                  <div className="workout-badge workout-badge-secondary">
-                    <Calendar size={14} style={{ marginRight: '4px' }} /> {planData?.days?.length || 0} GÜN
+               <h3 className="text-glow" style={{ fontSize: '1.8rem', margin: '0 0 14px 0', fontWeight: 900, letterSpacing: '-1px' }}>{item.planName || 'İsimsiz Program'}</h3>
+               <div style={{ display: 'flex', gap: '16px' }}>
+                  <div className="workout-badge workout-badge-secondary" style={{ padding: '8px 16px', borderRadius: '12px', fontSize: '0.8rem' }}>
+                    <Calendar size={14} style={{ marginRight: '8px' }} /> {planData?.days?.length || 0} ANTRENMAN GÜNÜ
                   </div>
-                  {idx === 0 && <div className="workout-badge workout-badge-primary">SON OLUŞTURULAN</div>}
+                  {idx === 0 && (
+                    <div className="workout-badge workout-badge-primary" style={{ padding: '8px 16px', borderRadius: '12px', fontSize: '0.8rem', boxShadow: '0 5px 15px var(--primary-glow)' }}>
+                      <Activity size={14} style={{ marginRight: '8px' }} /> AKTİF PERFORMANS PLANI
+                    </div>
+                  )}
                </div>
             </div>
          </div>
          
-         <div style={{ display: 'flex', gap: '12px' }}>
+         <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
             {!isCorrupted && (
               <button 
-                  onClick={(e) => { e.stopPropagation(); setActiveSession({ ...planData, workoutPlanId: item.workoutPlanId }); }} 
-                   className="btn btn-primary glow-effect" 
-                  style={{ padding: '12px 24px' }}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    if (planData && planData !== "CORRUPTED") {
+                      const sessionData = planData.days ? planData : { days: planData };
+                      if (Array.isArray(sessionData.days)) {
+                        try {
+                          if (document.documentElement.requestFullscreen) {
+                            document.documentElement.requestFullscreen().catch(() => {});
+                          }
+                        } catch (err) {}
+                        setActiveSession({ ...sessionData, workoutPlanId: item.workoutPlanId }); 
+                      }
+                    }
+                  }} 
+                  className="btn btn-primary" 
+                  style={{ height: '56px', padding: '0 30px', borderRadius: '18px', fontSize: '1rem', fontWeight: 800 }}
                >
-                  <PlayCircle size={20} /> Başlat
+                  <PlayCircle size={22} /> BAŞLAT
                </button>
             )}
-            <button onClick={() => setExpandedPlan(isExpanded ? null : item.workoutPlanId)} className="btn btn-secondary" style={{ padding: '12px' }}>
+            <button 
+              onClick={() => setExpandedPlan(isExpanded ? null : item.workoutPlanId)} 
+              className="btn-secondary hover-scale" 
+              style={{ width: '56px', height: '56px', borderRadius: '18px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'var(--transition)' }}
+            >
                {isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
             </button>
-            <button onClick={(e) => { e.stopPropagation(); handleDeleteWorkout(item.workoutPlanId); }} className="btn btn-secondary" style={{ color: 'var(--error)', padding: '12px' }}>
-               <Trash2 size={24} />
+            <button 
+              onClick={(e) => { e.stopPropagation(); handleDeleteWorkout(item.workoutPlanId); }} 
+              className="hover-glow-error hover-scale" 
+              style={{ width: '56px', height: '56px', borderRadius: '18px', background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.2)', color: '#f43f5e', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'var(--transition)' }}
+            >
+               <Trash2 size={22} />
             </button>
          </div>
       </div>
 
       {isExpanded && !isCorrupted && planData && (
-         <div className="animate-fade-in" style={{ padding: '0 28px 28px', borderTop: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.01)' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginTop: '24px' }}>
+         <div className="animate-fade-in" style={{ padding: '0 30px 30px', borderTop: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.01)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px', marginTop: '30px' }}>
                 {planData.days?.map((day, dIdx) => {
-                  // Her gün için bitirilme durumunu kontrol et
                   const storageKey = `completed_days_${item.workoutPlanId}`;
                   const saved = localStorage.getItem(storageKey);
                   const completedDays = saved ? JSON.parse(saved) : [];
@@ -73,35 +111,51 @@ const WorkoutCard = ({
 
                   return (
                     <div key={dIdx} className="glass-panel" style={{ 
-                      padding: '20px', 
-                      background: isCompleted ? 'rgba(14, 165, 233, 0.05)' : 'rgba(255,255,255,0.02)', 
-                      border: isCompleted ? '1px solid var(--primary)' : '1px solid rgba(255,255,255,0.05)',
-                      position: 'relative'
+                      padding: '24px', 
+                      background: isCompleted ? 'rgba(16, 185, 129, 0.08)' : 'var(--glass-bg)', 
+                      border: isCompleted ? '2px solid var(--success)' : '1px solid var(--glass-border)',
+                      position: 'relative',
+                      borderRadius: '24px',
+                      boxShadow: isCompleted ? '0 10px 30px rgba(16, 185, 129, 0.1)' : 'var(--shadow)'
                     }}>
-                      <div style={{ fontWeight: 800, marginBottom: '16px', color: isCompleted ? 'var(--secondary)' : 'var(--primary)', fontSize: '0.95rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontWeight: 800, marginBottom: '20px', color: isCompleted ? 'var(--success)' : 'var(--primary)', fontSize: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {isCompleted ? <CheckCircle2 size={16} /> : <Layout size={16} />} 
+                          {isCompleted ? <CheckCircle2 size={18} /> : <Layout size={18} />} 
                           {day.dayName.toUpperCase()}
                         </span>
                        <button 
-                          onClick={(e) => { e.stopPropagation(); setActiveSession({ ...planData, startDayIdx: dIdx, workoutPlanId: item.workoutPlanId }); }}
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            if (planData && planData !== "CORRUPTED") {
+                              const sessionData = planData.days ? planData : { days: planData };
+                              if (Array.isArray(sessionData.days)) {
+                                // Trigger Fullscreen
+                                try {
+                                  if (document.documentElement.requestFullscreen) {
+                                    document.documentElement.requestFullscreen().catch(() => {});
+                                  }
+                                } catch (err) {}
+                                setActiveSession({ ...sessionData, startDayIdx: dIdx, workoutPlanId: item.workoutPlanId }); 
+                              }
+                            }
+                          }}
                           className="btn btn-primary"
-                          style={{ padding: '4px 12px', fontSize: '0.7rem', borderRadius: '8px' }}
+                          style={{ padding: '6px 14px', fontSize: '0.75rem', borderRadius: '10px' }}
                        >
-                          <PlayCircle size={12} style={{ marginRight: '4px' }} /> BAŞLAT
+                          BAŞLAT
                        </button>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                        {day.exercises?.map((ex, eIdx) => (
                          <div key={eIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                               <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{ex.exerciseName}</span>
-                               <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{ex.targetMuscle}</span>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                               <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--secondary)' }}>{ex.sets}</span>
-                               <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginLeft: '4px' }}>set</span>
-                            </div>
+                             <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)' }}>{ex.exerciseName}</span>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>{ex.targetMuscle}</span>
+                             </div>
+                             <div style={{ textAlign: 'right', background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+                                <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--secondary)' }}>{ex.sets}</span>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '4px', fontWeight: 600 }}>set</span>
+                             </div>
                          </div>
                        ))}
                     </div>
@@ -109,12 +163,6 @@ const WorkoutCard = ({
                     );
                 })}
             </div>
-            
-            <div style={{ marginTop: '24px', textAlign: 'center' }}>
-                <button onClick={() => setActiveSession({ ...planData, workoutPlanId: item.workoutPlanId })} className="btn btn-primary" style={{ padding: '10px 30px', borderRadius: '12px' }}>
-                   Bu Programa Başla <ArrowUpRight size={18} style={{ marginLeft: '8px' }} />
-                </button>
-             </div>
          </div>
       )}
     </div>

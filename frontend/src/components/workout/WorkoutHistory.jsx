@@ -14,21 +14,28 @@ const WorkoutHistory = ({
 }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-       <div className="flex items-center justify-between">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ background: 'rgba(14, 165, 233, 0.1)', padding: '10px', borderRadius: '12px', color: 'var(--secondary)' }}>
-              <History size={22} />
-            </div>
-            <h2 style={{ fontSize: '1.8rem', margin: 0 }}>Program Geçmişi</h2>
-          </div>
-          <button 
-            onClick={fetchHistory} 
-            className={`btn btn-secondary ${loading ? 'animate-spin' : ''}`}
-            style={{ borderRadius: '50%', width: '48px', height: '48px', padding: 0 }}
-          >
-            <RotateCcw size={22} />
-          </button>
-       </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+             <div style={{ 
+               background: 'linear-gradient(135deg, var(--secondary), #38bdf8)', 
+               padding: '12px', borderRadius: '18px', color: '#fff',
+               boxShadow: '0 10px 20px rgba(14, 165, 233, 0.2)'
+             }}>
+               <History size={24} />
+             </div>
+             <div>
+               <h2 style={{ fontSize: '2.2rem', margin: 0, fontWeight: 900, letterSpacing: '-1px' }}>Program Geçmişi</h2>
+               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 600 }}>Son hazırlanan 10 program listeleniyor</p>
+             </div>
+           </div>
+           <button 
+             onClick={fetchHistory} 
+             className={`btn btn-secondary hover-scale ${loading ? 'animate-spin' : ''}`}
+             style={{ borderRadius: '16px', width: '56px', height: '56px', padding: 0 }}
+           >
+             <RotateCcw size={22} />
+           </button>
+        </div>
 
        {loading && historyItems.length === 0 ? (
          <div style={{ padding: '100px 0', textAlign: 'center' }}>

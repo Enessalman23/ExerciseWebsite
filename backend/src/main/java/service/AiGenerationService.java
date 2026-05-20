@@ -82,139 +82,145 @@ public class AiGenerationService {
 
         return "You are a PhD-level Sports Scientist and Elite Personal Trainer. I need a strictly formatted JSON workout plan for a " + genderStr + " user with the goal: " + request.getGoal() + ". " +
                 "--- SPORTS SCIENCE & SAFETY PROTOCOL ---\n" +
-                "1. ANTAGONIST BALANCE: For every PUSH movement, there MUST be a PULL movement of similar volume to prevent shoulder/posture injuries.\n" +
+                "1. ANTAGONIST BALANCE: For every PUSH movement, there MUST be a PULL movement of similar volume.\n" +
                 "2. RPE CUES: Use 'Hissedilen Zorluk' (RPE) to guide intensity safely.\n" +
-                "3. FORM OVER WEIGHT: Prioritize controlled eccentric (indirme) phase.\n" +
-                "4. FORBIDDEN: Do not suggest 'Behind the neck' presses or extremely high-impact plyometrics for beginners.\n" +
+                "3. FORM OVER WEIGHT: Prioritize controlled eccentric phase.\n" +
                 "--- TRAINING ARCHITECTURE ---\n" +
                 splitInstruction + "\n" +
                 "--- USER CONTEXT ---\n" +
                 "Level: " + request.getLevel() + ". " + levelContext + "\n" +
                 "Days per week: " + days + ".\n" +
-                "Focus Muscles: " + focusMusclesStr + ".\n" +
                 "Available Equipment: " + equipmentsStr + ".\n" +
-                "Extra Information (Injuries/Form): " + request.getExtraInformation() + ".\n" +
+                "Extra Info: " + request.getExtraInformation() + ".\n" +
                 "--- STRUCTURAL RULES ---\n" +
                 "1. Warmup: DO NOT include warmup exercises. Focus only on the main workout.\n" +
-                "2. Exercise Order: Start with heavy compound movements (multijoint) and move to isolation later.\n" +
-                "3. Variety: Do not repeat the same exercise twice in a plan.\n" +
+                "2. NAMING: Use standard names like 'Barbell Bench Press', 'Dumbbell Row', 'Lunge', 'Push-up'. ALWAYS include the equipment in the name (Barbell, Dumbbell, Cable, Bodyweight).\n" +
+                "3. VARIETY: ABSOLUTELY NO DUPLICATES across all " + days + " days.\n" +
                 "--- JSON OUTPUT FORMAT ---\n" +
                 "ONLY output valid JSON. Format exactly:\n" +
                 "{ \"days\": [ { \"dayName\": \"1. Gün...\", \"exercises\": [ { \"exerciseName\": \"Example\", \"targetMuscle\": \"pectorals\", \"sets\": 3, \"reps\": 12, \"rest\": \"90 sn\" } ] } ] }.";
     }
 
-private void enrichWithLocalData(ObjectNode planNode, List<String> availableEquipments) {
-    Random random = new Random();
-    Set<String> usedExerciseIds = new HashSet<>();
-    List<ExerciseDataDto> warmups = exerciseService.getWarmupExercises();
+    private void enrichWithLocalData(ObjectNode planNode, List<String> availableEquipments) {
+        Random random = new Random();
+        Set<String> usedExerciseIds = new HashSet<>();
+        List<ExerciseDataDto> warmups = exerciseService.getWarmupExercises();
 
-    if (planNode.has("days")) {
-        ArrayNode days = (ArrayNode) planNode.get("days");
-        for (JsonNode dayNode : days) {
-            ObjectNode dayObj = (ObjectNode) dayNode;
-            
-            // Add warmup exercises (3-4 random selections from warmup-eligible database)
-            ArrayNode warmupArray = dayObj.putArray("warmupExercises");
-            if (!warmups.isEmpty()) {
-                List<ExerciseDataDto> shuffledWarmups = new ArrayList<>(warmups);
-                Collections.shuffle(shuffledWarmups);
-                int count = 3 + random.nextInt(2); // 3 to 4 exercises
-                for (int i = 0; i < Math.min(count, shuffledWarmups.size()); i++) {
-                    ExerciseDataDto w = shuffledWarmups.get(i);
-                    ObjectNode wNode = warmupArray.addObject();
-                    wNode.put("exerciseId", w.getExerciseId());
-                    wNode.put("exerciseName", w.getName());
-                    wNode.put("gifUrl", w.getGifUrl());
-                    wNode.put("sets", "1");
-                    wNode.put("reps", "10-15");
-                    wNode.put("rest", "30 sn");
-                    
-                    ArrayNode imgs = wNode.putArray("images");
-                    if (w.getImages() != null) w.getImages().forEach(imgs::add);
-                    
-                    ArrayNode instructions = wNode.putArray("instructions");
-                    if (w.getInstructions() != null) w.getInstructions().forEach(instructions::add);
-                }
-            }
-
-            // Enrich regular exercises
-            if (dayNode.has("exercises")) {
-                enrichExerciseArray((ArrayNode) dayNode.get("exercises"), availableEquipments, random, usedExerciseIds);
-            }
-        }
-    }
-}
-
-private void enrichExerciseArray(ArrayNode exercisesArray, List<String> availableEquipments, Random random, Set<String> usedExerciseIds) {
-    for (JsonNode exerciseNode : exercisesArray) {
-        String targetMuscle = exerciseNode.path("targetMuscle").asText().toLowerCase();
-        String aiSuggestedName = exerciseNode.path("exerciseName").asText("");
-
-        List<ExerciseDataDto> exercises = exerciseService.getExercisesCache();
-        List<ExerciseDataDto> matches = exercises.stream()
-                .filter(e -> !usedExerciseIds.contains(e.getExerciseId()))
-                .filter(e -> (e.getTargetMuscles() != null && e.getTargetMuscles().contains(targetMuscle)) ||
-                        (e.getSecondaryMuscles() != null && e.getSecondaryMuscles().contains(targetMuscle)) ||
-                        (aiSuggestedName != null && !aiSuggestedName.isEmpty() && e.getName().toLowerCase().contains(aiSuggestedName.toLowerCase())))
-                .filter(e -> {
-                    if (availableEquipments == null || availableEquipments.isEmpty()) return true;
-                    if (e.getEquipments() == null || e.getEquipments().isEmpty()) return true;
-                    for (String eq : e.getEquipments()) {
-                        for (String userEq : availableEquipments) {
-                            if (eq.toLowerCase().contains(userEq.toLowerCase()) || userEq.toLowerCase().contains(eq.toLowerCase())) {
-                                return true;
-                            }
-                        }
+        if (planNode.has("days")) {
+            ArrayNode days = (ArrayNode) planNode.get("days");
+            for (JsonNode dayNode : days) {
+                ObjectNode dayObj = (ObjectNode) dayNode;
+                
+                // Add warmup exercises (3-4 random selections from warmup-eligible database)
+                ArrayNode warmupArray = dayObj.putArray("warmupExercises");
+                if (!warmups.isEmpty()) {
+                    List<ExerciseDataDto> shuffledWarmups = new ArrayList<>(warmups);
+                    Collections.shuffle(shuffledWarmups);
+                    int count = 3 + random.nextInt(2); // 3 to 4 exercises
+                    for (int i = 0; i < Math.min(count, shuffledWarmups.size()); i++) {
+                        ExerciseDataDto w = shuffledWarmups.get(i);
+                        ObjectNode wNode = warmupArray.addObject();
+                        wNode.put("exerciseId", w.getExerciseId());
+                        wNode.put("exerciseName", w.getName());
+                        wNode.put("gifUrl", w.getGifUrl());
+                        wNode.put("sets", "1");
+                        wNode.put("reps", "10-15");
+                        wNode.put("rest", "30 sn");
+                        
+                        ArrayNode imgs = wNode.putArray("images");
+                        if (w.getImages() != null) w.getImages().forEach(imgs::add);
+                        
+                        ArrayNode instructions = wNode.putArray("instructions");
+                        if (w.getInstructions() != null) w.getInstructions().forEach(instructions::add);
                     }
-                    return false;
-                })
-                .collect(Collectors.toList());
-
-        if (matches.isEmpty() && !exercises.isEmpty()) {
-            matches = exercises.stream()
-                    .filter(e -> !usedExerciseIds.contains(e.getExerciseId()))
-                    .filter(e -> (e.getTargetMuscles() != null && e.getTargetMuscles().contains(targetMuscle)))
-                    .collect(Collectors.toList());
-        }
-
-        // Final fallback: if still empty, relax the uniqueness constraint
-        if (matches.isEmpty() && !exercises.isEmpty()) {
-            matches = exercises.stream()
-                    .filter(e -> (e.getTargetMuscles() != null && e.getTargetMuscles().contains(targetMuscle)))
-                    .collect(Collectors.toList());
-        }
-
-        ObjectNode modifiableExercise = (ObjectNode) exerciseNode;
-        if (!matches.isEmpty()) {
-            ExerciseDataDto chosen = matches.get(random.nextInt(matches.size()));
-            usedExerciseIds.add(chosen.getExerciseId());
-            modifiableExercise.put("exerciseName", chosen.getName());
-            modifiableExercise.put("gifUrl", chosen.getGifUrl());
-
-            ArrayNode imagesNode = objectMapper.createArrayNode();
-            if (chosen.getImages() != null) {
-                chosen.getImages().forEach(imagesNode::add);
-            }
-            modifiableExercise.set("images", imagesNode);
-
-            ArrayNode instructions = objectMapper.createArrayNode();
-            if (chosen.getInstructions() != null) {
-                chosen.getInstructions().forEach(instructions::add);
-            }
-            modifiableExercise.set("instructions", instructions);
-        } else {
-            // Last resort fallback
-            if (!exercises.isEmpty()) {
-                ExerciseDataDto fallback = exercises.get(random.nextInt(exercises.size()));
-                if (modifiableExercise.path("exerciseName").isMissingNode() || modifiableExercise.path("exerciseName").asText().isEmpty()) {
-                    modifiableExercise.put("exerciseName", fallback.getName() + " (Alternatif)");
                 }
-                modifiableExercise.put("gifUrl", fallback.getGifUrl());
-                ArrayNode inst = objectMapper.createArrayNode();
-                if (fallback.getInstructions() != null) fallback.getInstructions().forEach(inst::add);
-                modifiableExercise.set("instructions", inst);
+
+                // Enrich regular exercises
+                if (dayNode.has("exercises")) {
+                    enrichExerciseArray((ArrayNode) dayNode.get("exercises"), availableEquipments, random, usedExerciseIds);
+                }
             }
         }
     }
-}
+
+    private void enrichExerciseArray(ArrayNode exercisesArray, List<String> availableEquipments, Random random, Set<String> usedExerciseIds) {
+        for (JsonNode exerciseNode : exercisesArray) {
+            String targetMuscle = exerciseNode.path("targetMuscle").asText().toLowerCase();
+            String rawAiName = exerciseNode.path("exerciseName").asText("");
+            
+            // Clean name (Remove RPE and common fluff)
+            String cleanAiName = rawAiName.replaceAll("\\(RPE.*?\\)", "")
+                    .replaceAll("(?i)exercise", "")
+                    .trim();
+
+            List<ExerciseDataDto> exercises = exerciseService.getExercisesCache();
+            
+            // Scored Matching Algorithm
+            List<ExerciseDataDto> scoredMatches = exercises.stream()
+                    .filter(e -> !usedExerciseIds.contains(e.getExerciseId()))
+                    .map(e -> {
+                        int score = 0;
+                        String dbName = e.getName().toLowerCase();
+                        String aiName = cleanAiName.toLowerCase();
+                        
+                        // Exact match is king
+                        if (dbName.equals(aiName)) score += 100;
+                        
+                        // Keyword matches
+                        String[] keywords = aiName.split("\\s+");
+                        for (String kw : keywords) {
+                            if (kw.length() < 3) continue;
+                            if (dbName.contains(kw)) score += 10;
+                        }
+
+                        // Equipment synergy
+                        if (aiName.contains("barbell") && dbName.contains("barbell")) score += 20;
+                        if (aiName.contains("dumbbell") && dbName.contains("dumbbell")) score += 20;
+                        if (aiName.contains("cable") && dbName.contains("cable")) score += 20;
+
+                        // Muscle synergy
+                        if (e.getTargetMuscles() != null && e.getTargetMuscles().contains(targetMuscle)) {
+                            score += 5;
+                        }
+
+                        return new AbstractMap.SimpleEntry<>(e, score);
+                    })
+                    .filter(entry -> entry.getValue() > 0)
+                    .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+                    .limit(10)
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toList());
+
+            ObjectNode modifiableExercise = (ObjectNode) exerciseNode;
+            if (!scoredMatches.isEmpty()) {
+                // Pick from top 3 matches to keep some variety but maintain high relevance
+                ExerciseDataDto chosen = scoredMatches.get(random.nextInt(Math.min(3, scoredMatches.size())));
+                usedExerciseIds.add(chosen.getExerciseId());
+                
+                modifiableExercise.put("exerciseName", rawAiName); 
+                modifiableExercise.put("gifUrl", chosen.getGifUrl());
+
+                ArrayNode imagesNode = objectMapper.createArrayNode();
+                if (chosen.getImages() != null) chosen.getImages().forEach(imagesNode::add);
+                modifiableExercise.set("images", imagesNode);
+
+                ArrayNode instructions = objectMapper.createArrayNode();
+                if (chosen.getInstructions() != null) chosen.getInstructions().forEach(instructions::add);
+                modifiableExercise.set("instructions", instructions);
+            } else {
+                // Relaxed Fallback
+                List<ExerciseDataDto> fallbackMatches = exercises.stream()
+                        .filter(e -> (e.getTargetMuscles() != null && e.getTargetMuscles().contains(targetMuscle)))
+                        .collect(Collectors.toList());
+                
+                if (!fallbackMatches.isEmpty()) {
+                    ExerciseDataDto fallback = fallbackMatches.get(random.nextInt(fallbackMatches.size()));
+                    modifiableExercise.put("gifUrl", fallback.getGifUrl());
+                    ArrayNode inst = objectMapper.createArrayNode();
+                    if (fallback.getInstructions() != null) fallback.getInstructions().forEach(inst::add);
+                    modifiableExercise.set("instructions", inst);
+                }
+            }
+        }
+    }
 }

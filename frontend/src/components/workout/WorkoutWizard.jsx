@@ -92,56 +92,64 @@ const WorkoutWizard = ({
           {/* <Brain size={32} color="var(--primary)" className="animate-pulse" /> */}
        </div>
        
-       {/* Progress Bar */}
-       <div style={{ marginBottom: '40px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '0.8rem', fontWeight: 700, opacity: 0.6 }}>
-             <span>ADIM {currentStep + 1} / {totalSteps}</span>
-             <span>{Math.round(((currentStep + 1) / totalSteps) * 100)}% TAMAMLANDI</span>
-          </div>
-          <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', overflow: 'hidden' }}>
-             <div style={{ 
-                width: `${((currentStep + 1) / totalSteps) * 100}%`, 
-                height: '100%', 
-                background: 'var(--primary)', 
-                transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: '0 0 15px var(--primary-glow)' 
-              }} />
-          </div>
-       </div>
-
-       <div style={{ flex: 1 }} className="animate-fade-in" key={currentStep}>
-          {/* STEP 0: GOAL SELECTION */}
-          {currentStep === 0 && (
-            <div>
-              <h2 style={{ fontSize: '1.8rem', marginBottom: '12px' }}>Hedefin Nedir?</h2>
-              <p style={{ color: 'var(--text-muted)', marginBottom: '32px' }}>Sana en uygun antrenman tarzını belirleyelim.</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                {GOAL_OPTIONS.map(opt => (
-                  <div 
-                    key={opt.id}
-                    onClick={() => setFormData({...formData, goal: opt.id})}
-                    className={`glass-panel pointer hover-scale ${formData.goal === opt.id ? 'active-card' : ''}`}
-                    style={{ 
-                      padding: '24px', 
-                      border: formData.goal === opt.id ? '2px solid var(--primary)' : '1px solid var(--border-color)',
-                      background: formData.goal === opt.id ? 'rgba(79, 70, 229, 0.05)' : 'transparent',
-                      textAlign: 'center'
-                    }}
-                  >
-                    <div style={{ 
-                      width: '48px', height: '48px', background: 'rgba(255,255,255,0.03)', 
-                      borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                      margin: '0 auto 16px', color: formData.goal === opt.id ? 'var(--primary)' : 'var(--text-muted)'
-                    }}>
-                      {opt.icon}
-                    </div>
-                    <div style={{ fontWeight: 700, marginBottom: '4px' }}>{opt.title}</div>
-                    <div style={{ fontSize: '0.75rem', opacity: 0.6 }}>{opt.desc}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+        {/* Progress Bar */}
+        <div style={{ marginBottom: '40px' }}>
+           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '1px', color: 'var(--text-muted)' }}>
+              <span style={{ color: 'var(--primary)' }}>YAPILANDIRMA</span>
+              <span>{Math.round(((currentStep + 1) / totalSteps) * 100)}%</span>
+           </div>
+           <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+              <div style={{ 
+                 width: `${((currentStep + 1) / totalSteps) * 100}%`, 
+                 height: '100%', 
+                 background: 'linear-gradient(90deg, var(--primary), var(--secondary))', 
+                 transition: 'width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                 boxShadow: '0 0 20px var(--primary-glow)' 
+               }} />
+           </div>
+        </div>
+ 
+        <div style={{ flex: 1 }} className="animate-fade-in" key={currentStep}>
+           {/* STEP 0: GOAL SELECTION */}
+           {currentStep === 0 && (
+             <div>
+               <h2 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '8px', letterSpacing: '-1px' }}>Hedefin Nedir?</h2>
+               <p style={{ color: 'var(--text-muted)', marginBottom: '32px', fontSize: '1rem' }}>Sana en uygun antrenman tarzını belirleyelim.</p>
+               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                 {GOAL_OPTIONS.map(opt => (
+                   <div 
+                     key={opt.id}
+                     onClick={() => setFormData({...formData, goal: opt.id})}
+                     className={`glass-panel pointer hover-scale ${formData.goal === opt.id ? 'active-card' : ''}`}
+                     style={{ 
+                       padding: '24px', 
+                       border: formData.goal === opt.id ? '2px solid var(--primary)' : '1px solid var(--border-color)',
+                       background: formData.goal === opt.id ? 'rgba(99, 102, 241, 0.08)' : 'rgba(255,255,255,0.01)',
+                       textAlign: 'center',
+                       position: 'relative',
+                       overflow: 'hidden'
+                     }}
+                   >
+                     {formData.goal === opt.id && (
+                        <div style={{ position: 'absolute', top: '10px', right: '10px' }}>
+                           <Sparkles size={16} color="var(--primary)" />
+                        </div>
+                     )}
+                     <div style={{ 
+                       width: '54px', height: '54px', background: formData.goal === opt.id ? 'var(--primary)' : 'rgba(255,255,255,0.03)', 
+                       borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                       margin: '0 auto 16px', color: formData.goal === opt.id ? '#fff' : 'var(--text-muted)',
+                       transition: 'all 0.3s'
+                     }}>
+                       {opt.icon}
+                     </div>
+                     <div style={{ fontWeight: 800, marginBottom: '6px', fontSize: '1rem' }}>{opt.title}</div>
+                     <div style={{ fontSize: '0.8rem', opacity: 0.5, lineHeight: '1.4' }}>{opt.desc}</div>
+                   </div>
+                 ))}
+               </div>
+             </div>
+           )}
 
           {/* STEP 1: EXPERIENCE & FREQUENCY */}
           {currentStep === 1 && (

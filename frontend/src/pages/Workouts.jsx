@@ -124,63 +124,72 @@ const Workouts = () => {
 
   const latestPlan = getLatestPlan();
 
+  if (activeSession) {
+    return (
+      <WorkoutPlayer 
+          plan={activeSession} 
+          onClose={() => {
+            setActiveSession(null);
+            fetchHistory(); // Refresh history when closing
+          }} 
+      />
+    );
+  }
+
   return (
-    <div className="container" style={{ paddingTop: '40px', paddingBottom: '80px', maxWidth: '1400px' }}>
+    <div className="container animate-fade-in" style={{ paddingTop: '20px', paddingBottom: '80px', maxWidth: '1600px' }}>
       
-      {/* HEADER & HERO SECTION */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '32px', marginBottom: '60px' }} className="responsive-grid">
-        <header>
-          <div className="animate-fade-in" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
-            <div className="glow-effect" style={{ background: 'var(--primary)', padding: '14px', borderRadius: '18px', color: '#fff', boxShadow: '0 10px 25px var(--primary-glow)' }}>
-              <Dumbbell size={32} />
-            </div>
-            <div>
-              <h1 style={{ fontSize: '2.8rem', fontWeight: 800, margin: 0, letterSpacing: '-1px' }}>Antrenman Merkezi</h1>
-              <div style={{ display: 'flex', gap: '20px', marginTop: '4px' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-                   <Activity size={16} color="var(--primary)" /> AI Destekli
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-                   <Award size={16} color="var(--secondary)" /> Premium Planlar
-                </span>
+      {/* CINEMATIC HERO SECTION */}
+      <section style={{ 
+        position: 'relative', 
+        height: '320px', 
+        borderRadius: '32px', 
+        overflow: 'hidden', 
+        marginBottom: '40px',
+        boxShadow: 'var(--shadow)'
+      }}>
+        {/* Background Layer */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'url("https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop")',
+          backgroundSize: 'cover', backgroundPosition: 'center 30%',
+          filter: 'brightness(0.5)'
+        }}></div>
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(to bottom, rgba(9,9,11,0.2) 0%, rgba(9,9,11,0.9) 100%), linear-gradient(to right, rgba(9,9,11,0.8) 0%, transparent 60%)'
+        }}></div>
+
+        {/* Content Overlay */}
+        <div style={{ position: 'relative', height: '100%', padding: '40px 50px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+           <div className="animate-slide-up">
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'var(--primary)', color: '#fff', padding: '5px 12px', borderRadius: '10px', fontSize: '0.7rem', fontWeight: 800, marginBottom: '16px', letterSpacing: '1px' }}>
+                <Activity size={12} /> AI PERFORMANCE HUB
               </div>
-            </div>
-          </div>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1.15rem', maxWidth: '650px', lineHeight: '1.6', marginTop: '20px' }}>
-            Kişisel hedeflerinize ve ekipmanlarınıza göre optimize edilmiş, bilimsel temelli antrenman programlarıyla sınırlarını zorla.
-          </p>
-        </header>
+              <h1 className="text-glow" style={{ fontSize: '2.8rem', fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-2px', lineHeight: 1 }}>
+                SINIRLARINI <br/> 
+                <span style={{ color: 'var(--primary)' }}>YENİDEN TANIMLA.</span>
+              </h1>
+              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '1rem', maxWidth: '450px', marginTop: '16px', lineHeight: 1.5 }}>
+                Bilimsel temelli algoritmalarla hazırlanan, tamamen sana özel profesyonel antrenman deneyimi.
+              </p>
+           </div>
+        </div>
 
-        {latestPlan && latestPlan.data !== "CORRUPTED" && (
-          <div className="glass-panel animate-fade-in" style={{ padding: '24px', position: 'relative', overflow: 'hidden', border: '1px solid var(--primary-glow)' }}>
-             <div style={{ position: 'absolute', top: '-20px', right: '-20px', opacity: 0.1 }}>
-               <Flame size={120} color="var(--primary)" />
-             </div>
-             <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Aktif Programın</div>
-                <h3 style={{ fontSize: '1.6rem', marginBottom: '16px' }}>{latestPlan.planName}</h3>
-                
-                <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
-                   <div className="workout-badge workout-badge-primary" style={{ padding: '6px 14px' }}>
-                      <Calendar size={14} style={{ marginRight: '6px' }} /> {latestPlan.data?.days?.length || 0} Günlük
-                   </div>
-                   <div className="workout-badge workout-badge-secondary" style={{ padding: '6px 14px' }}>
-                      <Target size={14} style={{ marginRight: '6px' }} /> {latestPlan.data?.days?.[0]?.exercises?.length || 0} Hareket
-                   </div>
-                </div>
-
-                <button 
-                  onClick={() => latestPlan.data && setActiveSession({ ...latestPlan.data, workoutPlanId: latestPlan.workoutPlanId })}
-                  className="btn btn-primary" 
-                  style={{ width: '100%', height: '54px', fontSize: '1.1rem', boxShadow: '0 15px 30px var(--primary-glow)' }}
-                >
-                  <PlayCircle size={22} /> Hemen Başla
-                </button>
-             </div>
-          </div>
-        )}
-      </div>
-
+        {/* Floating Stats Cards */}
+        <div style={{ position: 'absolute', bottom: '30px', right: '40px', display: 'flex', gap: '15px' }} className="hide-on-mobile">
+           <div className="premium-glass-dark" style={{ padding: '15px 24px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '2px' }}>Toplam Program</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>{historyItems.length}</div>
+           </div>
+           <div className="premium-glass-dark" style={{ padding: '15px 24px', borderRadius: '20px', border: '1px solid var(--primary)', background: 'rgba(99, 102, 241, 0.1)' }}>
+              <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--primary)', textTransform: 'uppercase', marginBottom: '2px' }}>Aktif Seri</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                 3 <Flame size={20} color="var(--primary)" fill="var(--primary)" />
+              </div>
+           </div>
+        </div>
+      </section>
       <div style={{ display: 'grid', gridTemplateColumns: '450px 1fr', gap: '48px', alignItems: 'start' }} className="responsive-grid">
         
         {/* LEFT PANEL: SMART GENERATOR WIZARD */}
@@ -208,12 +217,6 @@ const Workouts = () => {
         />
       </div>
 
-      {activeSession && (
-        <WorkoutPlayer 
-            plan={activeSession} 
-            onClose={() => setActiveSession(null)} 
-        />
-      )}
 
       <ConfirmDialog 
         isOpen={deleteConfirm.isOpen}

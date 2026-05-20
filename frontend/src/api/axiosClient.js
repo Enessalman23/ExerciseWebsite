@@ -60,10 +60,15 @@ axiosClient.interceptors.response.use(
       localStorage.removeItem('username');
       window.location.href = '/login';
     }
-    // Yalnızca 400 hatası ise ve backend bize spesifik bir hata mesajı gönderdiyse alert verelim:
+    // Yalnızca 400 hatası ise ve backend bize spesifik bir hata mesajı gönderdiyse custom alert verelim:
     if (error.response && error.response.status === 400 && error.response.data && error.response.data.message) {
-      // Alert ile backend'deki net hatayı kullanıcıya gösteriyoruz ("Metrics not found" gibi)
-      alert("Hata: " + error.response.data.message);
+      window.dispatchEvent(new CustomEvent('app-alert', { 
+        detail: { 
+          title: 'İşlem Başarısız', 
+          message: error.response.data.message, 
+          type: 'error' 
+        } 
+      }));
     }
     
     return Promise.reject(error);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axiosClient from '../api/axiosClient';
-import { Send, User, Bot, Loader2, MessageSquare, Info, Sparkles, Mic, Volume2, VolumeX } from 'lucide-react';
+import { Send, User, Bot, Loader2, MessageSquare, Info, Sparkles, Mic, Volume2, VolumeX, Target, Activity } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
 const Coach = () => {
@@ -99,73 +99,96 @@ const Coach = () => {
   };
 
   return (
-    <div className="container" style={{ paddingTop: '40px', paddingBottom: '40px', maxWidth: '1000px', height: 'calc(100vh - 160px)', display: 'flex', flexDirection: 'column' }}>
+    <div className="container" style={{ paddingTop: '30px', paddingBottom: '30px', maxWidth: '1100px', height: 'calc(100vh - 140px)', display: 'flex', flexDirection: 'column' }}>
       
-      <header style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-        <div style={{ background: 'var(--primary)', padding: '12px', borderRadius: '15px', color: '#fff' }}>
-          <MessageSquare size={28} />
+      <header style={{ marginBottom: '25px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <div className="premium-shadow" style={{ background: 'var(--primary)', padding: '12px', borderRadius: '18px', color: '#fff', boxShadow: '0 8px 20px var(--primary-glow)' }}>
+            <Sparkles size={28} />
+          </div>
+          <div>
+            <h1 className="text-glow" style={{ fontSize: '2.2rem', margin: 0, fontWeight: 900 }}>AI Coach</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981' }}></div>
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600 }}>Çevrimiçi & Hazır</span>
+            </div>
+          </div>
         </div>
-        <div>
-          <h1 style={{ fontSize: '2rem', margin: 0 }}>AI Antrenör</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>Her an yanında olan profesyonel fitness koçun.</p>
+        
+        <div style={{ display: 'flex', gap: '10px' }}>
+           <button onClick={() => setMessages([{ role: 'assistant', text: 'Merhaba! Ben AI Antrenörün. Bugün sana nasıl yardımcı olabilirim?' }])} className="btn-secondary" style={{ padding: '10px 18px', borderRadius: '14px', fontSize: '0.85rem' }}>Sohbeti Sıfırla</button>
         </div>
       </header>
 
-      <div className="glass-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '0' }}>
+      <div className="glass-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '0', border: '1px solid var(--glass-border)', background: 'var(--glass-bg)' }}>
         
         {/* Messages Area */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '30px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="custom-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '40px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {messages.map((msg, idx) => (
             <div 
               key={idx} 
-              className={`animate-fade-in`}
+              className="animate-slide-up"
               style={{ 
                 display: 'flex', 
-                gap: '15px', 
+                gap: '16px', 
                 flexDirection: msg.role === 'user' ? 'row-reverse' : 'row',
                 alignItems: 'flex-start'
               }}
             >
-              <div 
+              <div className="premium-shadow"
                 style={{ 
-                  width: '40px', 
-                  height: '40px', 
-                  borderRadius: '12px', 
-                  background: msg.role === 'user' ? 'rgba(14, 165, 233, 0.1)' : 'rgba(79, 70, 229, 0.1)',
+                  width: '44px', 
+                  height: '44px', 
+                  borderRadius: '14px', 
+                  background: msg.role === 'user' ? 'var(--secondary)' : 'var(--primary)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: msg.role === 'user' ? 'var(--secondary)' : 'var(--primary)',
-                  flexShrink: 0
+                  color: '#fff',
+                  flexShrink: 0,
+                  boxShadow: msg.role === 'user' ? '0 10px 20px rgba(14, 165, 233, 0.2)' : '0 10px 20px rgba(79, 70, 229, 0.2)'
                 }}
               >
-                {msg.role === 'user' ? <User size={20} /> : <Bot size={20} />}
+                {msg.role === 'user' ? <User size={22} /> : <Bot size={22} />}
               </div>
               
               <div 
                 style={{ 
-                  maxWidth: '70%', 
-                  padding: '16px 20px', 
-                  borderRadius: msg.role === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
-                  background: msg.role === 'user' ? 'var(--secondary)' : 'var(--surface-hover)',
+                  maxWidth: '75%', 
+                  padding: '18px 24px', 
+                  borderRadius: msg.role === 'user' ? '24px 24px 4px 24px' : '24px 24px 24px 4px',
+                  background: msg.role === 'user' ? 'linear-gradient(135deg, var(--secondary), #0ea5e9)' : 'var(--surface-color)',
                   color: msg.role === 'user' ? '#fff' : 'var(--text-main)',
-                  boxShadow: msg.role === 'user' ? '0 4px 15px var(--secondary-glow)' : 'none',
-                  fontSize: '1rem',
+                  fontSize: '1.05rem',
                   lineHeight: 1.6,
-                  border: msg.role === 'assistant' ? '1px solid var(--border-color)' : 'none'
+                  border: msg.role === 'assistant' ? '1px solid var(--glass-border)' : 'none',
+                  backdropFilter: msg.role === 'assistant' ? 'blur(10px)' : 'none',
+                  boxShadow: msg.role === 'user' ? '0 15px 30px rgba(0,0,0,0.2)' : 'none'
                 }}
               >
                 {msg.text}
               </div>
             </div>
           ))}
+          
           {isLoading && (
-            <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-               <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(79, 70, 229, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
-                <Bot size={20} />
+            <div className="animate-fade-in" style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+               <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                <Bot size={22} />
               </div>
-              <div style={{ background: 'var(--surface-hover)', padding: '12px 20px', borderRadius: '20px', border: '1px solid var(--border-color)' }}>
-                <Loader2 size={24} className="animate-spin" color="var(--primary)" />
+              <div className="animate-shimmer" style={{ 
+                width: '180px', 
+                height: '60px', 
+                borderRadius: '24px 24px 24px 4px', 
+                border: '1px solid var(--glass-border)',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '0 20px',
+                gap: '8px',
+                background: 'var(--surface-color)'
+              }}>
+                <div className="spinner" style={{ width: '16px', height: '16px', border: '2px solid var(--glass-border)', borderLeftColor: 'var(--primary)' }}></div>
+                <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 600 }}>Düşünüyor...</span>
               </div>
             </div>
           )}
@@ -173,79 +196,84 @@ const Coach = () => {
         </div>
 
         {/* Input Area */}
-        <div style={{ padding: '30px', borderTop: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.02)' }}>
+        <div style={{ padding: '30px 40px', background: 'var(--bg-color)', borderTop: '1px solid var(--glass-border)' }}>
+          
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
+             <button onClick={() => setInput('Bugün ne çalışmalıyım?')} className="btn-secondary" style={{ padding: '6px 14px', borderRadius: '10px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Sparkles size={14} color="var(--primary)" /> Antrenman Önerisi
+             </button>
+             <button onClick={() => setInput('Kilo vermek için 3 ipucu verir misin?')} className="btn-secondary" style={{ padding: '6px 14px', borderRadius: '10px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Target size={14} color="var(--secondary)" /> Yağ Yakımı
+             </button>
+             <button onClick={() => setInput('Evde ekipmansız ne yapabilirim?')} className="btn-secondary" style={{ padding: '6px 14px', borderRadius: '10px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Activity size={14} color="#10b981" /> Ekipmansız Antrenman
+             </button>
+          </div>
+
           <form 
             onSubmit={handleSend}
             style={{ 
               display: 'flex', 
-              gap: '15px', 
-              background: 'var(--bg-color)', 
-              padding: '8px', 
-              borderRadius: '18px',
-              border: '1px solid var(--border-color)',
-              boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
+              gap: '12px', 
+              background: 'var(--surface-hover)', 
+              padding: '10px', 
+              borderRadius: '24px',
+              border: '1px solid var(--glass-border)',
+              alignItems: 'center'
             }}
           >
             <input 
               type="text" 
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Antrenmanınla ilgili bir soru sor..."
+              placeholder="Mesajınızı buraya yazın..."
               style={{ 
                 flex: 1, 
                 border: 'none', 
                 background: 'transparent', 
                 padding: '0 15px',
-                fontSize: '1rem',
+                fontSize: '1.05rem',
                 color: 'var(--text-main)',
                 outline: 'none'
               }}
               disabled={isLoading}
             />
             
-            <button 
-              type="button" 
-              onClick={toggleListening}
-              className={`btn ${isListening ? 'btn-danger' : 'btn-secondary'}`}
-              style={{ width: '50px', height: '50px', padding: 0, borderRadius: '14px', background: isListening ? 'var(--error)' : 'transparent', color: isListening ? 'white' : 'var(--text-muted)', border: 'none' }}
-              title={isListening ? "Dinlemeyi Durdur" : "Sesli Soru Sor"}
-            >
-              <Mic size={20} />
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                type="button" 
+                onClick={toggleListening}
+                className={`btn ${isListening ? 'btn-danger' : 'btn-secondary'}`}
+                style={{ width: '46px', height: '46px', padding: 0, borderRadius: '16px', background: isListening ? 'var(--error)' : 'var(--surface-color)', border: 'none' }}
+              >
+                <Mic size={20} color={isListening ? 'white' : 'var(--text-muted)'} />
+              </button>
 
-            <button 
-              type="button" 
-              onClick={() => setVoiceEnabled(!voiceEnabled)}
-              className="btn"
-              style={{ width: '50px', height: '50px', padding: 0, borderRadius: '14px', background: voiceEnabled ? 'rgba(79, 70, 229, 0.1)' : 'transparent', color: voiceEnabled ? 'var(--primary)' : 'var(--text-muted)', border: 'none' }}
-              title={voiceEnabled ? "Sesi Kapat" : "Sesi Aç"}
-            >
-              {voiceEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
-            </button>
+              <button 
+                type="button" 
+                onClick={() => {
+                  const newState = !voiceEnabled;
+                  setVoiceEnabled(newState);
+                  if (!newState && window.speechSynthesis) {
+                    window.speechSynthesis.cancel();
+                  }
+                }}
+                className="btn-secondary"
+                style={{ width: '46px', height: '46px', padding: 0, borderRadius: '16px', background: 'var(--surface-color)', border: 'none' }}
+              >
+                {voiceEnabled ? <Volume2 size={20} color="var(--primary)" /> : <VolumeX size={20} color="var(--text-muted)" />}
+              </button>
 
-            <button 
-              type="submit" 
-              disabled={!input.trim() || isLoading}
-              className="btn btn-primary"
-              style={{ width: '50px', height: '50px', padding: 0, borderRadius: '14px' }}
-            >
-              <Send size={20} />
-            </button>
+              <button 
+                type="submit" 
+                disabled={!input.trim() || isLoading}
+                className="btn btn-primary"
+                style={{ width: '46px', height: '46px', padding: 0, borderRadius: '16px', boxShadow: '0 8px 15px var(--primary-glow)' }}
+              >
+                <Send size={20} />
+              </button>
+            </div>
           </form>
-          <div style={{ display: 'flex', gap: '20px', marginTop: '15px', justifyContent: 'center' }}>
-             <button 
-              onClick={() => setInput('Bugün bacak çalıştım, nasıl esnemeliyim?')}
-              style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
-             >
-                <Sparkles size={14} /> Bacak esneme?
-             </button>
-             <button 
-              onClick={() => setInput('Akşam yemeği için proteinli tarif verir misin?')}
-              style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
-             >
-                <Sparkles size={14} /> Yemek tarifi?
-             </button>
-          </div>
         </div>
       </div>
     </div>

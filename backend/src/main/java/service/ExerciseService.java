@@ -172,15 +172,20 @@ public class ExerciseService {
             String level = ex.getLevel() != null ? ex.getLevel().toLowerCase() : "";
             String equip = ex.getEquipment() != null ? ex.getEquipment().toLowerCase() : "";
 
-            // Warmup criteria: Stretching, Cardio, or light bodyweight beginner movements
-            boolean isStretching = cat.contains("stretching");
-            boolean isCardio = cat.contains("cardio");
-            boolean isWarmupKeywords = name.contains("circle") || name.contains("stretch") || name.contains("rotation") 
-                                    || name.contains("warm up") || name.contains("warmup");
-            boolean isLightBodyweight = level.equals("beginner") && equip.contains("body only") 
-                                     && (name.contains("pushup") || name.contains("sit-up") || name.contains("crunch") || name.contains("plank") || name.contains("jumping jack"));
+            // User specifically asked to remove bicycle and focus on home-friendly warmups
+            if (name.contains("bicycle") || name.contains("bike") || equip.contains("machine")) return false;
 
-            return isStretching || isCardio || isWarmupKeywords || isLightBodyweight;
+            // Warmup criteria: Stretching or light bodyweight movements
+            boolean isStretching = cat.contains("stretching") || cat.contains("stretches");
+            boolean isWarmupKeywords = name.contains("circle") || name.contains("stretch") || name.contains("rotation") 
+                                    || name.contains("warm up") || name.contains("warmup") || name.contains("dynamic");
+            
+            // Basic bodyweight home movements (No equipment needed)
+            boolean isHomeFriendly = (equip.contains("body only") || equip.equals("")) 
+                                    && (name.contains("jack") || name.contains("run") || name.contains("walk") 
+                                        || name.contains("squat") || name.contains("plank") || name.contains("knee"));
+
+            return isStretching || isWarmupKeywords || isHomeFriendly;
         }).collect(Collectors.toList());
     }
 }

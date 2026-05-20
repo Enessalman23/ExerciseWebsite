@@ -6,9 +6,7 @@ import entity.Badge;
 import entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import service.GamificationService;
 
 import java.util.List;
@@ -28,5 +26,13 @@ public class GamificationController {
     @GetMapping("/badges")
     public ResponseEntity<List<Badge>> getMyBadges(@CurrentUser User user) {
         return ResponseEntity.ok(gamificationService.getMyBadges(user));
+    }
+
+    @PostMapping("/award-badge")
+    public ResponseEntity<Void> awardBadge(@CurrentUser User user, @RequestBody String badgeName) {
+        // Remove quotes if present from JSON body
+        String cleanedName = badgeName.replace("\"", "");
+        gamificationService.awardBadge(user, cleanedName);
+        return ResponseEntity.ok().build();
     }
 }

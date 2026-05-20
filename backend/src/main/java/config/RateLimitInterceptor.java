@@ -24,8 +24,8 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String uri = request.getRequestURI();
         
-        // Sadece AI endpoint'leri için rate limiting uygula
-        if (uri.startsWith("/api/ai/")) {
+        // Sadece AI endpoint'leri için rate limiting uygula (ve sadece POST istekleri yani üretim işlemleri)
+        if (uri.startsWith("/api/ai/") && "POST".equalsIgnoreCase(request.getMethod())) {
             String clientIp = request.getRemoteAddr();
             // Eğer giriş yapmış kullanıcı varsa onun ID'sini almak daha mantıklı olabilir ama IP şimdilik yeterli.
             String username = request.getUserPrincipal() != null ? request.getUserPrincipal().getName() : clientIp;
