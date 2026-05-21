@@ -19,18 +19,19 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/progress")
+@RequestMapping("/api/progress-photos")
 @RequiredArgsConstructor
 public class ProgressPhotoController {
 
     private final ProgressPhotoRepository progressPhotoRepository;
     private final String UPLOAD_DIR = "uploads/progress-photos/";
 
-    @PostMapping("/upload")
+    @PostMapping
     public ResponseEntity<?> uploadPhoto(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "weight", required = false, defaultValue = "0.0") double weight,
             @RequestParam(value = "note", required = false) String note,
+            @RequestParam(value = "notes", required = false) String notes,
             @CurrentUser User user) {
 
         try {
@@ -43,11 +44,13 @@ public class ProgressPhotoController {
             Path filePath = Paths.get(UPLOAD_DIR, filename);
             Files.write(filePath, file.getBytes());
 
+            String finalNote = notes != null ? notes : note;
+
             ProgressPhoto photo = ProgressPhoto.builder()
                     .user(user)
-                    .photoUrl("/api/progress/images/" + filename)
+                    .photoUrl("/api/progress-photos/images/" + filename)
                     .weightAtTime(weight)
-                    .note(note)
+                    .note(finalNote)
                     .photoDate(LocalDate.now())
                     .build();
 
@@ -64,7 +67,46 @@ public class ProgressPhotoController {
         List<ProgressPhoto> photos = progressPhotoRepository.findByUserOrderByPhotoDateDesc(user);
         return ResponseEntity.ok(photos);
     }
-    
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deletePhoto(@PathVariable Long id, @CurrentUser User user) {
+        return progressPhotoRepository.findById(id)
+                .map(photo -> {
+                    if (!photo.getUser().getId().equals(user.getId())) {
+                        return ResponseEntity.status(403).body("Bu fotoğrafı silmeye yetkiniz yok.");
+                    }
+                    try {
+                        String photoUrl = photo.getPhotoUrl();
+                        String filename = photoUrl.substring(photoUrl.lastIndexOf("/") + 1);
+                        Path filePath = Paths.get(UPLOAD_DIR, filename);
+                        Files.deleteIfExists(filePath);
+                    } catch (Exception e) {
+                        System.err.println("Dosya silinirken hata oluştu: " + e.getMessage());
+                    }
+                    progressPhotoRepository.delete(photo);
+                    return ResponseEntity.ok("Fotoğraf başarıyla silindi.");
+                })
+                .orElse(ResponseEntity.status(404).body("Fotoğraf bulunamadı."));
+    }
+
+    @GetMapping("/images/{filename}")
+    public ResponseEntity<byte[]> getImage(@PathVariable String filename) {
+        try {
+            Path path = Paths.get(UPLOAD_DIR, filename);
+            byte[] imageBytes = Files.readAllBytes(path);
+            return ResponseEntity.ok().header("Content-Type", "image/jpeg").body(imageBytes);
+        } catch (IOException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+}
+
+@RestController
+@RequestMapping("/api/progress")
+@RequiredArgsConstructor
+class LegacyProgressPhotoController {
+    private final String UPLOAD_DIR = "uploads/progress-photos/";
+
     @GetMapping("/images/{filename}")
     public ResponseEntity<byte[]> getImage(@PathVariable String filename) {
         try {

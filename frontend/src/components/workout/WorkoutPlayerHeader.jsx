@@ -4,8 +4,7 @@ const WorkoutPlayerHeader = ({
   plan, currentDay, currentDayIdx, completedDays, 
   setCurrentDayIdx, setCurrentStep, setExerciseIdx, 
   setWarmupIdx, stopTimer, onClose, warmupExercises, 
-  toggleFullScreen, isFocused, setIsFocused,
-  isMuted, setIsMuted
+  isFocused, isMuted, setIsMuted
 }) => {
   return (
     <div style={{ padding: '30px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 100 }}>

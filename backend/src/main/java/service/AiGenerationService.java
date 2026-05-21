@@ -12,6 +12,8 @@ import entity.WorkoutPlan;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import repository.WorkoutPlanRepository;
+import repository.UserMetricsRepository;
+import entity.UserMetrics;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,10 +25,21 @@ public class AiGenerationService {
     private final GeminiClientService geminiClientService;
     private final ExerciseService exerciseService;
     private final WorkoutPlanRepository workoutPlanRepository;
+    private final UserMetricsRepository userMetricsRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public AiWorkoutResponse generateWorkout(AiWorkoutRequest request, User user) {
-        String prompt = buildPrompt(request);
+        String injuries = "";
+        try {
+            Optional<UserMetrics> metricsOpt = userMetricsRepository.findFirstByUserOrderByRecordedAtDesc(user);
+            if (metricsOpt.isPresent() && metricsOpt.get().getInjuries() != null) {
+                injuries = metricsOpt.get().getInjuries();
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to fetch user injuries: " + e.getMessage());
+        }
+
+        String prompt = buildPrompt(request, injuries);
 
         try {
             String jsonContent = geminiClientService.generateContent(prompt, 3, true);
@@ -47,7 +60,7 @@ public class AiGenerationService {
             throw new RuntimeException("Failed to process AI workout plan: " + e.getMessage(), e);
         }
     }
-    private String buildPrompt(AiWorkoutRequest request) {
+    private String buildPrompt(AiWorkoutRequest request, String injuries) {
         String genderStr = request.getGender() != null ? request.getGender() : "Belirtilmemiş";
         String focusMusclesStr = (request.getFocusMuscles() != null && !request.getFocusMuscles().isEmpty()) 
                 ? String.join(", ", request.getFocusMuscles()) 
@@ -80,11 +93,24 @@ public class AiGenerationService {
             splitInstruction = "STRUCTURE: 5-Day Hypertrophy Split. Limit high-RPE sets to 2 per muscle group to prevent CNS fatigue.";
         }
 
+        String injuryDirective = "";
+        if (injuries != null && !injuries.trim().isEmpty()) {
+            injuryDirective = "\n--- CRITICAL MEDICAL/SAFETY PROTOCOL (INJURIES DETECTED) ---\n" +
+                    "The user has reported the following active injuries/medical limitations: \"" + injuries + "\".\n" +
+                    "1. AVOID RISKY MOVEMENTS: You MUST ABSOLUTELY avoid any exercises that put stress on or exacerbate these injuries. For example, if there is a knee injury, completely avoid heavy Squats, Lunges, Leg Press. If there is a shoulder impingement, avoid heavy overhead barbell lifting. If there are lower back issues, avoid traditional Deadlifts or heavy back squats.\n" +
+                    "2. SAFE ALTERNATIVES: Select safe, highly stable alternative exercises targeting the same or nearby muscles safely (e.g., Leg Extensions/Glute Bridges for knee issues, machine chest press or lateral raises for shoulder issues).\n" +
+                    "3. MARK REPLACEMENTS: For EVERY exercise in the JSON output, you MUST populate these three custom safety fields:\n" +
+                    "   - \"isAlternative\": true if this exercise was chosen as a safe alternative to avoid injury stress, or false otherwise.\n" +
+                    "   - \"replacedExercise\": the name of the standard/risky exercise that was avoided (e.g. \"Barbell Back Squat\"), or null if none.\n" +
+                    "   - \"injuryReason\": a brief explanation of why the replacement occurred based on the injury (e.g. \"Diz sakatlığı güvenliği\"), or null if none.\n";
+        }
+
         return "You are a PhD-level Sports Scientist and Elite Personal Trainer. I need a strictly formatted JSON workout plan for a " + genderStr + " user with the goal: " + request.getGoal() + ". " +
                 "--- SPORTS SCIENCE & SAFETY PROTOCOL ---\n" +
                 "1. ANTAGONIST BALANCE: For every PUSH movement, there MUST be a PULL movement of similar volume.\n" +
                 "2. RPE CUES: Use 'Hissedilen Zorluk' (RPE) to guide intensity safely.\n" +
                 "3. FORM OVER WEIGHT: Prioritize controlled eccentric phase.\n" +
+                injuryDirective +
                 "--- TRAINING ARCHITECTURE ---\n" +
                 splitInstruction + "\n" +
                 "--- USER CONTEXT ---\n" +
@@ -98,7 +124,7 @@ public class AiGenerationService {
                 "3. VARIETY: ABSOLUTELY NO DUPLICATES across all " + days + " days.\n" +
                 "--- JSON OUTPUT FORMAT ---\n" +
                 "ONLY output valid JSON. Format exactly:\n" +
-                "{ \"days\": [ { \"dayName\": \"1. Gün...\", \"exercises\": [ { \"exerciseName\": \"Example\", \"targetMuscle\": \"pectorals\", \"sets\": 3, \"reps\": 12, \"rest\": \"90 sn\" } ] } ] }.";
+                "{ \"days\": [ { \"dayName\": \"1. Gün...\", \"exercises\": [ { \"exerciseName\": \"Example\", \"targetMuscle\": \"pectorals\", \"sets\": 3, \"reps\": 12, \"rest\": \"90 sn\", \"isAlternative\": false, \"replacedExercise\": null, \"injuryReason\": null } ] } ] }.";
     }
 
     private void enrichWithLocalData(ObjectNode planNode, List<String> availableEquipments) {

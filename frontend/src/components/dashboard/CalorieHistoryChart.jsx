@@ -13,7 +13,7 @@ const CalorieHistoryChart = ({ calorieHistory, healthStats }) => {
           Kalori Geçmişi
         </h3>
         {healthStats && (
-          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.02)', padding: '6px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', fontWeight: 700 }}>
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', background: 'var(--glass-bg)', padding: '6px 14px', borderRadius: '12px', border: '1px solid var(--glass-border)', fontWeight: 700 }}>
             Hedef: <span style={{ color: 'var(--text-main)' }}>{healthStats.tdee} kcal</span>
           </div>
         )}
@@ -38,11 +38,20 @@ const CalorieHistoryChart = ({ calorieHistory, healthStats }) => {
             />
             <YAxis hide domain={[0, dataMax => Math.max(dataMax, healthStats?.tdee || 2000) * 1.3]} />
             <Tooltip 
-              cursor={{ fill: 'rgba(255, 255, 255, 0.05)', radius: 10 }}
+              cursor={{ fill: 'var(--border-color)', radius: 10 }}
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
                   return (
-                    <div className="premium-glass-dark" style={{ padding: '15px 20px', borderRadius: '20px', border: '1px solid var(--glass-border)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', minWidth: '160px' }}>
+                    <div style={{ 
+                      background: 'var(--glass-bg)', 
+                      backdropFilter: 'blur(24px)', 
+                      WebkitBackdropFilter: 'blur(24px)', 
+                      padding: '15px 20px', 
+                      borderRadius: '20px', 
+                      border: '1px solid var(--glass-border)', 
+                      boxShadow: 'var(--shadow)', 
+                      minWidth: '160px' 
+                    }}>
                       <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>{payload[0].payload.FullDate}</p>
                       <p style={{ margin: '8px 0 0', fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary)' }} className="text-glow-primary">
                         {payload[0].value} <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>kcal</span>

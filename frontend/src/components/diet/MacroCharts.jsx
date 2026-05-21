@@ -7,12 +7,12 @@ export const MacroBarChart = ({ compareData }) => (
     <div style={{ height: '300px' }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={compareData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" opacity={0.3} />
           <XAxis dataKey="name" stroke="var(--text-muted)" />
           <YAxis stroke="var(--text-muted)" />
           <Tooltip contentStyle={{ background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '12px' }} />
           <Bar dataKey="Alınan" fill="var(--primary)" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="Hedef" fill="rgba(255,255,255,0.05)" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="Hedef" fill="var(--border-color)" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

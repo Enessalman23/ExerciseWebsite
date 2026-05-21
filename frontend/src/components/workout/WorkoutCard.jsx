@@ -68,11 +68,9 @@ const WorkoutCard = ({
                     if (planData && planData !== "CORRUPTED") {
                       const sessionData = planData.days ? planData : { days: planData };
                       if (Array.isArray(sessionData.days)) {
-                        try {
-                          if (document.documentElement.requestFullscreen) {
-                            document.documentElement.requestFullscreen().catch(() => {});
-                          }
-                        } catch (err) {}
+                        if (document.documentElement.requestFullscreen) {
+                          document.documentElement.requestFullscreen().catch(() => {});
+                        }
                         setActiveSession({ ...sessionData, workoutPlanId: item.workoutPlanId }); 
                       }
                     }
@@ -130,11 +128,9 @@ const WorkoutCard = ({
                               const sessionData = planData.days ? planData : { days: planData };
                               if (Array.isArray(sessionData.days)) {
                                 // Trigger Fullscreen
-                                try {
-                                  if (document.documentElement.requestFullscreen) {
-                                    document.documentElement.requestFullscreen().catch(() => {});
-                                  }
-                                } catch (err) {}
+                                if (document.documentElement.requestFullscreen) {
+                                  document.documentElement.requestFullscreen().catch(() => {});
+                                }
                                 setActiveSession({ ...sessionData, startDayIdx: dIdx, workoutPlanId: item.workoutPlanId }); 
                               }
                             }
@@ -148,10 +144,31 @@ const WorkoutCard = ({
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                        {day.exercises?.map((ex, eIdx) => (
                          <div key={eIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)' }}>{ex.exerciseName}</span>
-                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>{ex.targetMuscle}</span>
-                             </div>
+                              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                 <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)' }}>{ex.exerciseName}</span>
+                                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                   {ex.targetMuscle}
+                                 </span>
+                                 {ex.isAlternative && (
+                                   <span style={{ 
+                                     fontSize: '0.7rem', 
+                                     color: '#38bdf8', 
+                                     background: 'rgba(14, 165, 233, 0.08)', 
+                                     border: '1px solid rgba(14, 165, 233, 0.2)', 
+                                     borderRadius: '8px', 
+                                     padding: '4px 8px', 
+                                     marginTop: '6px', 
+                                     fontWeight: 700, 
+                                     width: 'fit-content',
+                                     display: 'inline-flex',
+                                     alignItems: 'center',
+                                     boxShadow: '0 2px 10px rgba(14, 165, 233, 0.05)',
+                                     lineHeight: '1.2'
+                                   }}>
+                                     🛡️ AI Güvenlik Alternatifi: {ex.injuryReason || 'Sakatlık Önleme'} nedeniyle {ex.replacedExercise || 'riskli hareket'} yerine yerleştirildi.
+                                   </span>
+                                 )}
+                              </div>
                              <div style={{ textAlign: 'right', background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
                                 <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--secondary)' }}>{ex.sets}</span>
                                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '4px', fontWeight: 600 }}>set</span>

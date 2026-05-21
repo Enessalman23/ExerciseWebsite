@@ -1,102 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
-import axiosClient from '../api/axiosClient';
-import { Send, User, Bot, Loader2, MessageSquare, Info, Sparkles, Mic, Volume2, VolumeX, Target, Activity } from 'lucide-react';
-import { useToast } from '../context/ToastContext';
+import React from 'react';
+import { Send, User, Bot, Sparkles, Mic, Volume2, VolumeX, Target, Activity } from 'lucide-react';
+import { useCoachChat } from '../hooks/useCoachChat';
 
 const Coach = () => {
-  const [messages, setMessages] = useState([
-    { role: 'assistant', text: 'Merhaba! Ben AI Antrenörün. Bugün sana antrenman veya beslenme konusunda nasıl yardımcı olabilirim?' }
-  ]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef(null);
-  const [isListening, setIsListening] = useState(false);
-  const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const recognitionRef = useRef(null);
-  const { showToast } = useToast();
-
-  useEffect(() => {
-    // Initialize Speech Recognition
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.lang = 'tr-TR';
-      
-      recognitionRef.current.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setInput(prev => prev + " " + transcript);
-      };
-      
-      recognitionRef.current.onerror = (event) => {
-        console.error("Speech recognition error", event.error);
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onend = () => {
-        setIsListening(false);
-      };
-    }
-  }, []);
-
-  const toggleListening = () => {
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-    } else {
-      setInput('');
-      recognitionRef.current?.start();
-      setIsListening(true);
-    }
-  };
-
-  const speak = (text) => {
-    if (!voiceEnabled || !window.speechSynthesis) return;
-    
-    window.speechSynthesis.cancel(); // Cancel any ongoing speech
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'tr-TR';
-    
-    // Try to find a Turkish voice
-    const voices = window.speechSynthesis.getVoices();
-    const trVoice = voices.find(voice => voice.lang.includes('tr'));
-    if (trVoice) {
-      utterance.voice = trVoice;
-    }
-    
-    window.speechSynthesis.speak(utterance);
-  };
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSend = async (e) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
-
-    const userMsg = input.trim();
-    setInput('');
-    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
-    setIsLoading(true);
-
-    try {
-      const res = await axiosClient.post('/api/ai/coach', { message: userMsg });
-      const reply = res.data.response;
-      setMessages(prev => [...prev, { role: 'assistant', text: reply }]);
-      speak(reply);
-    } catch (err) {
-      console.error(err);
-      showToast("Bir hata oluştu. Lütfen tekrar dene.", "error");
-      setMessages(prev => [...prev, { role: 'assistant', text: "Üzgünüm, şu an bağlantı kuramıyorum. Lütfen internetini kontrol et veya az sonra tekrar dene." }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    messages,
+    input,
+    setInput,
+    isLoading,
+    isListening,
+    voiceEnabled,
+    messagesEndRef,
+    toggleListening,
+    handleSend,
+    resetChat,
+    handleVoiceToggle
+  } = useCoachChat();
 
   return (
     <div className="container" style={{ paddingTop: '30px', paddingBottom: '30px', maxWidth: '1100px', height: 'calc(100vh - 140px)', display: 'flex', flexDirection: 'column' }}>
@@ -116,7 +35,7 @@ const Coach = () => {
         </div>
         
         <div style={{ display: 'flex', gap: '10px' }}>
-           <button onClick={() => setMessages([{ role: 'assistant', text: 'Merhaba! Ben AI Antrenörün. Bugün sana nasıl yardımcı olabilirim?' }])} className="btn-secondary" style={{ padding: '10px 18px', borderRadius: '14px', fontSize: '0.85rem' }}>Sohbeti Sıfırla</button>
+           <button onClick={resetChat} className="btn-secondary" style={{ padding: '10px 18px', borderRadius: '14px', fontSize: '0.85rem' }}>Sohbeti Sıfırla</button>
         </div>
       </header>
 
@@ -251,13 +170,7 @@ const Coach = () => {
 
               <button 
                 type="button" 
-                onClick={() => {
-                  const newState = !voiceEnabled;
-                  setVoiceEnabled(newState);
-                  if (!newState && window.speechSynthesis) {
-                    window.speechSynthesis.cancel();
-                  }
-                }}
+                onClick={handleVoiceToggle}
                 className="btn-secondary"
                 style={{ width: '46px', height: '46px', padding: 0, borderRadius: '16px', background: 'var(--surface-color)', border: 'none' }}
               >

@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
+import MobileBottomNav from './MobileBottomNav';
 
 const Layout = () => {
   return (
@@ -15,6 +16,7 @@ const Layout = () => {
           </div>
         </main>
       </div>
+      <MobileBottomNav />
     </div>
   );
 };

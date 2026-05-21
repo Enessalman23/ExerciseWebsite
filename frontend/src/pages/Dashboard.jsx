@@ -1,11 +1,11 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import {
   Activity, Apple, Dumbbell, User, Award,
   ArrowRight, Droplets, ChevronUp, ChevronDown,
   Target, Zap, Clock, Info, ChevronRight, RotateCcw, Flame
 } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { useHealthStats } from '../hooks/useHealthStats';
@@ -22,7 +22,6 @@ import WorkoutPlayer from '../components/WorkoutPlayer';
 
 const Dashboard = () => {
   const user = useAuthStore((state) => state.user);
-  const navigate = useNavigate();
   const [metrics, setMetrics] = useState(null);
   const [latestDiet, setLatestDiet] = useState(null);
   const [latestWorkout, setLatestWorkout] = useState(null);
@@ -62,7 +61,7 @@ const Dashboard = () => {
 
   const handleMuscleClick = async (data) => {
     const muscle = data.muscle;
-    
+
     // Toggle logic: If clicking the same muscle, deselect it
     if (muscle === selectedMuscle) {
       setSelectedMuscle(null);
@@ -85,7 +84,7 @@ const Dashboard = () => {
   const getImageUrl = (path) => {
     if (!path) return '';
     if (!path.includes('gifs_360x360')) {
-        return `http://localhost:8080/exercise-images/${path}`;
+      return `http://localhost:8080/exercise-images/${path}`;
     }
     return `http://localhost:8080/gifs/gifs_360x360/${path}`;
   };
@@ -100,9 +99,9 @@ const Dashboard = () => {
 
   return (
     <div className="container" style={{ paddingTop: '20px', paddingBottom: '80px', maxWidth: '1400px' }}>
-      
+
       {/* HERO SECTION */}
-      <div className="premium-glass-dark premium-shadow" style={{ 
+      <div className="premium-glass-dark premium-shadow" style={{
         position: 'relative', overflow: 'hidden', borderRadius: '30px', padding: '60px 40px', marginBottom: '50px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between'
       }}>
@@ -117,16 +116,11 @@ const Dashboard = () => {
           position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: -1,
           background: 'linear-gradient(to right, rgba(15,23,42,0.95) 0%, rgba(15,23,42,0.4) 100%)'
         }}></div>
-
         <div style={{ zIndex: 1 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.1)', padding: '8px 16px', borderRadius: '20px', marginBottom: '20px', backdropFilter: 'blur(10px)' }}>
-            <Zap size={16} color="var(--secondary)" />
-            <span style={{ color: '#fff', fontSize: '0.9rem', fontWeight: 600, letterSpacing: '1px' }}>DASHBOARD</span>
-          </div>
-          <h1 className="text-glow" style={{ fontSize: '3rem', fontWeight: 900, margin: 0, color: '#fff', lineHeight: 1.2 }}>
+          <h1 className="text-glow" style={{ fontSize: '3rem', fontWeight: 900, margin: 0, color: '#fff', lineHeight: 1.1 }}>
             Hoş geldin, <span className="text-glow-primary" style={{ color: 'var(--secondary)' }}>{user?.username}</span>!
           </h1>
-          <p style={{ color: '#cbd5e1', fontSize: '1.25rem', marginTop: '15px', maxWidth: '500px', lineHeight: 1.6 }}>
+          <p style={{ color: '#cbd5e1', fontSize: '1.25rem', marginTop: '15px', maxWidth: '500px', lineHeight: 1.8 }}>
             Bugün yeni bir zirveye ulaşmaya hazır mısın? İstatistiklerini takip et, hedeflerine odaklan.
           </p>
         </div>
@@ -134,7 +128,7 @@ const Dashboard = () => {
 
       {/* TOP STATS ROW */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '30px', marginBottom: '50px' }} className="responsive-grid">
-        
+
         {/* BMI & TDEE */}
         <div className="hover-glow" style={{ borderRadius: '24px' }}>
           <BodyAnalysisWidget metrics={metrics} healthStats={healthStats} />
@@ -159,8 +153,8 @@ const Dashboard = () => {
           </div>
           Etkileşimli Egzersiz <span style={{ color: 'var(--primary)' }}>Keşfi</span>
         </h2>
-        
-        <AnatomyExplorer 
+
+        <AnatomyExplorer
           viewModel={viewModel}
           setViewModel={setViewModel}
           selectedMuscle={selectedMuscle}
@@ -172,15 +166,15 @@ const Dashboard = () => {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }} className="responsive-grid">
-         {/* LATEST DIET WIDGET */}
-         <div className="hover-glow" style={{ borderRadius: '24px' }}>
+        {/* LATEST DIET WIDGET */}
+        <div className="hover-glow" style={{ borderRadius: '24px' }}>
           <ActiveDietWidget latestDiet={latestDiet} />
-         </div>
+        </div>
 
-         {/* LATEST WORKOUT WIDGET */}
-         <div className="hover-glow" style={{ borderRadius: '24px' }}>
+        {/* LATEST WORKOUT WIDGET */}
+        <div className="hover-glow" style={{ borderRadius: '24px' }}>
           <ActiveWorkoutWidget latestWorkout={latestWorkout} />
-         </div>
+        </div>
       </div>
     </div>
   );

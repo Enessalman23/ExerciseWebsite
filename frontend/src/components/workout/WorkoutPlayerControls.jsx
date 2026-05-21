@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { SkipForward, CheckCircle2, Timer, ArrowRight, Loader, BrainCircuit } from 'lucide-react';
 import axiosClient from '../../api/axiosClient';
-import { triggerAchievement } from '../AchievementSystem';
 
 const WorkoutPlayerControls = ({ currentStep, warmupIdx, warmupExercises, handleStepNext, skipTimer, onClose, currentDayName }) => {
   const [rpe, setRpe] = useState(5);
@@ -13,11 +12,7 @@ const WorkoutPlayerControls = ({ currentStep, warmupIdx, warmupExercises, handle
     try {
       const response = await axiosClient.post('/api/ai/workout-feedback', { rpe, dayName: currentDayName });
       setFeedback(response.data.feedback);
-      triggerAchievement({
-        type: 'trophy',
-        title: 'Demir İrade',
-        description: 'Antrenmanı başarıyla bitirdin. Bugünün kazananı sensin!'
-      });
+
     } catch (err) {
       console.error(err);
       setFeedback('Değerlendirme alınamadı, ancak harika bir iş çıkardın!');

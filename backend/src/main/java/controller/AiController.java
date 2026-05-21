@@ -25,6 +25,9 @@ import java.util.stream.Collectors;
 
 import service.AiFeedbackService;
 import service.AiRecipeService;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import java.util.Base64;
 
 @RestController
 @RequestMapping("/api/ai")
@@ -118,6 +121,27 @@ public class AiController {
             return ResponseEntity.ok(Map.of("feedback", feedback));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Geçersiz parametreler"));
+        }
+    }
+
+    @PostMapping("/nutrition-analyze-image")
+    public ResponseEntity<Map<String, Object>> analyzeFoodImage(
+            @RequestParam("image") MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Dosya boş olamaz"));
+        }
+        try {
+            String mimeType = file.getContentType();
+            if (mimeType == null || !mimeType.startsWith("image/")) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Lütfen geçerli bir resim dosyası yükleyin"));
+            }
+            byte[] bytes = file.getBytes();
+            String base64Data = Base64.getEncoder().encodeToString(bytes);
+            Map<String, Object> analysis = nutritionService.analyzeFoodImage(mimeType, base64Data);
+            return ResponseEntity.ok(analysis);
+        } catch (Exception e) {
+            System.err.println("Error processing uploaded food image: " + e.getMessage());
+            return ResponseEntity.status(500).body(Map.of("error", "Resim işlenirken hata oluştu"));
         }
     }
 }

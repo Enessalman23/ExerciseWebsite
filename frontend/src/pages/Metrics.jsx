@@ -2,12 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { useToast } from '../context/ToastContext';
-import { User, Activity, Flame, Target, Info, Calendar, PieChart as PieIcon, TrendingUp } from 'lucide-react';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell 
+import { User, Flame, Info, Calendar, PieChart as PieIcon } from 'lucide-react';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, AreaChart, Area, CartesianGrid
 } from 'recharts';
-import { triggerAchievement } from '../components/AchievementSystem';
+
 
 const BMI_CATEGORIES = [
   { label: 'Zayıf', color: '#3b82f6', min: 0, max: 18.5 },
@@ -28,7 +28,7 @@ const Metrics = () => {
     dietaryRestrictions: '',
     injuries: ''
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const { showToast } = useToast();
@@ -41,7 +41,7 @@ const Metrics = () => {
 
     const bmi = (w / ((h / 100) ** 2)).toFixed(1);
     const category = BMI_CATEGORIES.find(c => bmi >= c.min && bmi < c.max) || BMI_CATEGORIES[3];
-    
+
     let bmr = 0;
     if (formData.gender === 'MALE') {
       bmr = 88.362 + (13.397 * w) + (4.799 * h) - (5.677 * (formData.age || 25));
@@ -57,7 +57,7 @@ const Metrics = () => {
       'SUPER_ACTIVE': 1.9
     };
     const tdee = Math.round(bmr * (activityMultipliers[formData.activityLevel] || 1.2));
-    
+
     return { bmi, category, bmr: Math.round(bmr), tdee };
   }, [formData]);
 
@@ -77,7 +77,7 @@ const Metrics = () => {
             injuries: res.data.injuries || ''
           });
         }
-      } catch (err) {
+      } catch {
         console.log("No existing metrics or failed to fetch");
       } finally {
         setFetching(false);
@@ -93,7 +93,7 @@ const Metrics = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       await axiosClient.post('/api/metrics', {
         age: parseInt(formData.age),
@@ -106,11 +106,6 @@ const Metrics = () => {
         injuries: formData.injuries
       });
       showToast('Profiliniz başarıyla kaydedildi!', "success");
-      triggerAchievement({
-        type: 'check',
-        title: 'Veri Madencisi',
-        description: 'Fiziksel profilini güncelleyerek AI analizini güçlendirdin!'
-      });
       setTimeout(() => navigate('/dashboard'), 1500);
     } catch (err) {
       console.error(err);
@@ -125,12 +120,19 @@ const Metrics = () => {
   return (
     <div className="container" style={{ paddingTop: '40px', paddingBottom: '80px', maxWidth: '1400px' }}>
       <div className="grid-2-1" style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '40px' }}>
-        
+
         {/* LEFT: FORM SECTION */}
         <div className="animate-fade-in">
-          <header className="premium-glass-dark" style={{ 
-            borderRadius: '32px', padding: '40px', marginBottom: '30px',
-            border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden'
+          <header style={{
+            background: 'var(--glass-bg)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            borderRadius: '32px',
+            padding: '40px',
+            marginBottom: '30px',
+            border: '1px solid var(--glass-border)',
+            position: 'relative',
+            overflow: 'hidden'
           }}>
             <div style={{ position: 'relative', zIndex: 1 }}>
               <h1 className="text-glow" style={{ fontSize: '2.5rem', fontWeight: 900, margin: 0 }}>
@@ -143,7 +145,7 @@ const Metrics = () => {
           <div className="glass-panel" style={{ padding: '40px' }}>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}><User size={20} color="var(--primary)" /> Kişisel Veriler</h3>
-              
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                 <div className="input-group">
                   <label className="input-label">Yaşınız</label>
@@ -210,14 +212,14 @@ const Metrics = () => {
 
         {/* RIGHT: LIVE ANALYSIS & PERFORMANCE SECTION */}
         <div className="animate-slide-in" style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-          
+
           <div className="sticky-card" style={{ position: 'sticky', top: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <h3 style={{ fontSize: '1.2rem', color: 'var(--text-main)', fontWeight: 800 }}>Fiziksel Analiz</h3>
-            
+
             {!healthStats ? (
               <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', opacity: 0.5, borderStyle: 'dashed' }}>
-                 <Info size={40} style={{ marginBottom: '15px' }} />
-                 <p style={{ color: 'var(--text-main)' }}>Verilerinizi girmeye başladığınızda analiz burada görünecek.</p>
+                <Info size={40} style={{ marginBottom: '15px' }} />
+                <p style={{ color: 'var(--text-main)' }}>Verilerinizi girmeye başladığınızda analiz burada görünecek.</p>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -234,13 +236,13 @@ const Metrics = () => {
                 </div>
 
                 <div className="glass-panel" style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <Flame size={20} color="#f43f5e" />
-                      <div>
-                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800 }}>GÜNLÜK HEDEF</div>
-                        <div style={{ fontSize: '1.2rem', fontWeight: 900 }}>{healthStats.tdee} kcal</div>
-                      </div>
-                   </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <Flame size={20} color="#f43f5e" />
+                    <div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800 }}>GÜNLÜK HEDEF</div>
+                      <div style={{ fontSize: '1.2rem', fontWeight: 900 }}>{healthStats.tdee} kcal</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -265,7 +267,7 @@ const WorkoutPerformanceAnalysis = () => {
       try {
         const res = await axiosClient.get('/api/workouts/history');
         setHistory(res.data || []);
-      } catch (err) {
+      } catch {
         console.error("Failed to fetch history for analysis");
       } finally {
         setLoading(false);
@@ -297,7 +299,9 @@ const WorkoutPerformanceAnalysis = () => {
             muscleDist[m] = (muscleDist[m] || 0) + 1;
           });
         });
-      } catch (e) {}
+      } catch {
+        // Ignored
+      }
     });
 
     const muscleData = Object.entries(muscleDist).map(([name, value]) => ({ name, value }));
@@ -313,16 +317,16 @@ const WorkoutPerformanceAnalysis = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      
+
       {/* Weekly Frequency */}
       <div className="glass-panel" style={{ padding: '20px', height: '200px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px', fontSize: '0.8rem', fontWeight: 700 }}>
-           <Calendar size={14} color="var(--primary)" /> HAFTALIK FREKANS
+          <Calendar size={14} color="var(--primary)" /> HAFTALIK FREKANS
         </div>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={stats.freqData}>
             <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'var(--text-muted)' }} />
-            <Tooltip 
+            <Tooltip
               contentStyle={{ background: 'var(--surface-color)', border: '1px solid var(--glass-border)', borderRadius: '8px', fontSize: '12px' }}
               itemStyle={{ color: 'var(--primary)' }}
             />
@@ -334,7 +338,7 @@ const WorkoutPerformanceAnalysis = () => {
       {/* Muscle Distribution */}
       <div className="glass-panel" style={{ padding: '20px', height: '200px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px', fontSize: '0.8rem', fontWeight: 700 }}>
-           <PieIcon size={14} color="var(--secondary)" /> BÖLGESEL DAĞILIM
+          <PieIcon size={14} color="var(--secondary)" /> BÖLGESEL DAĞILIM
         </div>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -354,12 +358,22 @@ const WorkoutPerformanceAnalysis = () => {
         </ResponsiveContainer>
       </div>
 
-      <div className="premium-glass-dark" style={{ padding: '15px', borderRadius: '16px', textAlign: 'center' }}>
-         <div style={{ fontSize: '0.7rem', opacity: 0.6, fontWeight: 800 }}>TOPLAM TAMAMLANAN</div>
-         <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary)' }}>{stats.total}</div>
+      <div style={{
+        background: 'var(--glass-bg)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        padding: '15px',
+        borderRadius: '16px',
+        textAlign: 'center',
+        border: '1px solid var(--glass-border)'
+      }}>
+        <div style={{ fontSize: '0.7rem', opacity: 0.6, fontWeight: 800 }}>TOPLAM TAMAMLANAN</div>
+        <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary)' }}>{stats.total}</div>
       </div>
     </div>
   );
 };
+
+
 
 export default Metrics;

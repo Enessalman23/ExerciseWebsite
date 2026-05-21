@@ -78,6 +78,12 @@ public class MealLogController {
             Integer protein = parseNutrient(request.get("protein"));
             Integer carbs = parseNutrient(request.get("carbs"));
             Integer fats = parseNutrient(request.get("fats"));
+            Integer sodium = parseNutrient(request.get("sodium"));
+            Integer potassium = parseNutrient(request.get("potassium"));
+            Integer calcium = parseNutrient(request.get("calcium"));
+            Integer caffeine = parseNutrient(request.get("caffeine"));
+            Integer vitaminC = parseNutrient(request.get("vitaminC"));
+            Integer iron = parseNutrient(request.get("iron"));
 
             MealLog meal = MealLog.builder()
                     .user(user)
@@ -86,6 +92,12 @@ public class MealLogController {
                     .protein(protein)
                     .carbs(carbs)
                     .fats(fats)
+                    .sodium(sodium)
+                    .potassium(potassium)
+                    .calcium(calcium)
+                    .caffeine(caffeine)
+                    .vitaminC(vitaminC)
+                    .iron(iron)
                     .build();
 
             return ResponseEntity.ok(mealLogRepository.save(meal));

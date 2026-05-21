@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axiosClient from '../api/axiosClient';
-import { Plus, Apple, Target, ChevronRight, Flame, Droplets, Info } from 'lucide-react';
+import { Plus, Apple, Info, ShieldAlert, Coffee, Flame, Activity } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import NutritionAnalysisForm from '../components/diet/NutritionAnalysisForm';
 import { MacroBarChart, MacroPieChart } from '../components/diet/MacroCharts';
@@ -9,25 +9,26 @@ import MealHistoryList from '../components/diet/MealHistoryList';
 const NutritionJournal = () => {
   const [meals, setMeals] = useState([]);
   const [targetDiet, setTargetDiet] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
     foodName: '',
     calories: '',
     protein: '',
     carbs: '',
-    fats: ''
+    fats: '',
+    sodium: 0,
+    potassium: 0,
+    calcium: 0,
+    caffeine: 0,
+    vitaminC: 0,
+    iron: 0
   });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
   const [analysisQuery, setAnalysisQuery] = useState('');
   const { showToast } = useToast();
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = useCallback(async () => {
     try {
       const [mealsRes, dietRes] = await Promise.all([
         axiosClient.get('/api/meals'),
@@ -37,20 +38,30 @@ const NutritionJournal = () => {
       if (dietRes.data && dietRes.data.length > 0) {
         setTargetDiet(dietRes.data[0]);
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
       showToast("Veriler yüklenemedi.", "error");
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [showToast]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const sums = meals.reduce((acc, meal) => ({
-    calories: acc.calories + meal.calories,
-    protein: acc.protein + meal.protein,
-    carbs: acc.carbs + meal.carbs,
-    fats: acc.fats + meal.fats,
-  }), { calories: 0, protein: 0, carbs: 0, fats: 0 });
+    calories: acc.calories + (meal.calories || 0),
+    protein: acc.protein + (meal.protein || 0),
+    carbs: acc.carbs + (meal.carbs || 0),
+    fats: acc.fats + (meal.fats || 0),
+    sodium: acc.sodium + (meal.sodium || 0),
+    potassium: acc.potassium + (meal.potassium || 0),
+    calcium: acc.calcium + (meal.calcium || 0),
+    caffeine: acc.caffeine + (meal.caffeine || 0),
+    vitaminC: acc.vitaminC + (meal.vitaminC || 0),
+    iron: acc.iron + (meal.iron || 0)
+  }), { 
+    calories: 0, protein: 0, carbs: 0, fats: 0, 
+    sodium: 0, potassium: 0, calcium: 0, caffeine: 0, vitaminC: 0, iron: 0 
+  });
 
   const handleAnalyzeFood = async () => {
     if (!analysisQuery.trim()) {
@@ -65,18 +76,74 @@ const NutritionJournal = () => {
         showToast(data.error, "error");
       } else {
         setFormData({
-          foodName: data.foodName,
-          calories: data.calories,
-          protein: data.protein,
-          carbs: data.carbs,
-          fats: data.fats
+          foodName: data.foodName || '',
+          calories: data.calories !== undefined ? data.calories : 0,
+          protein: data.protein !== undefined ? data.protein : 0,
+          carbs: data.carbs !== undefined ? data.carbs : 0,
+          fats: data.fats !== undefined ? data.fats : 0,
+          sodium: data.sodium !== undefined ? data.sodium : 0,
+          potassium: data.potassium !== undefined ? data.potassium : 0,
+          calcium: data.calcium !== undefined ? data.calcium : 0,
+          caffeine: data.caffeine !== undefined ? data.caffeine : 0,
+          vitaminC: data.vitaminC !== undefined ? data.vitaminC : 0,
+          iron: data.iron !== undefined ? data.iron : 0
         });
         showToast("Besin değerleri hesaplandı!", "success");
       }
-    } catch (err) {
+    } catch {
       showToast("Analiz sırasında bir hata oluştu.", "error");
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showToast("Lütfen sadece resim dosyası seçin.", "error");
+      return;
+    }
+
+    setIsAnalyzingImage(true);
+    showToast("Görsel yükleniyor ve analiz ediliyor...", "info");
+
+    const formDataObj = new FormData();
+    formDataObj.append('image', file);
+
+    try {
+      const res = await axiosClient.post('/api/ai/nutrition-analyze-image', formDataObj, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      const data = res.data;
+      if (data.error) {
+        showToast(data.error, "error");
+      } else {
+        setFormData({
+          foodName: data.foodName || '',
+          calories: data.calories !== undefined ? data.calories : 0,
+          protein: data.protein !== undefined ? data.protein : 0,
+          carbs: data.carbs !== undefined ? data.carbs : 0,
+          fats: data.fats !== undefined ? data.fats : 0,
+          sodium: data.sodium !== undefined ? data.sodium : 0,
+          potassium: data.potassium !== undefined ? data.potassium : 0,
+          calcium: data.calcium !== undefined ? data.calcium : 0,
+          caffeine: data.caffeine !== undefined ? data.caffeine : 0,
+          vitaminC: data.vitaminC !== undefined ? data.vitaminC : 0,
+          iron: data.iron !== undefined ? data.iron : 0
+        });
+        showToast("Yemek görseli başarıyla analiz edildi!", "success");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Görsel analiz edilemedi. Lütfen tekrar deneyin.", "error");
+    } finally {
+      setIsAnalyzingImage(false);
+      e.target.value = '';
     }
   };
 
@@ -89,11 +156,14 @@ const NutritionJournal = () => {
     try {
       await axiosClient.post('/api/meals', formData);
       showToast("Öğün başarıyla kaydedildi.", "success");
-      setFormData({ foodName: '', calories: '', protein: '', carbs: '', fats: '' });
+      setFormData({ 
+        foodName: '', calories: '', protein: '', carbs: '', fats: '',
+        sodium: 0, potassium: 0, calcium: 0, caffeine: 0, vitaminC: 0, iron: 0 
+      });
       setAnalysisQuery('');
       setShowAddForm(false);
       fetchData();
-    } catch (err) {
+    } catch {
       showToast("Kayıt sırasında hata oluştu.", "error");
     }
   };
@@ -103,7 +173,7 @@ const NutritionJournal = () => {
       await axiosClient.delete(`/api/meals/${id}`);
       showToast("Öğün silindi.", "success");
       fetchData();
-    } catch (err) {
+    } catch {
       showToast("Silme başarısız.", "error");
     }
   };
@@ -119,6 +189,16 @@ const NutritionJournal = () => {
     { name: 'Protein', Alınan: sums.protein, Hedef: targetDiet?.targetProtein || 150 },
     { name: 'Karbonhidrat', Alınan: sums.carbs, Hedef: targetDiet?.targetCarbs || 250 },
     { name: 'Yağ', Alınan: sums.fats, Hedef: targetDiet?.targetFats || 70 },
+  ];
+
+  // Daily Micro-Nutrient Limits & Targets
+  const microsList = [
+    { name: 'Kafein', key: 'caffeine', unit: 'mg', limit: 400, type: 'limit', desc: 'Günlük güvenli sınır (400 mg)', color: '#a8a29e', alertColor: '#ef4444' },
+    { name: 'Sodyum', key: 'sodium', unit: 'mg', limit: 2300, type: 'limit', desc: 'Günlük maksimum sınır (2300 mg)', color: '#38bdf8', alertColor: '#f97316' },
+    { name: 'Potasyum', key: 'potassium', unit: 'mg', limit: 3500, type: 'target', desc: 'Günlük önerilen hedef (3500 mg)', color: '#4f46e5', alertColor: '#10b981' },
+    { name: 'Kalsiyum', key: 'calcium', unit: 'mg', limit: 1000, type: 'target', desc: 'Günlük önerilen hedef (1000 mg)', color: '#06b6d4', alertColor: '#10b981' },
+    { name: 'C Vitamini', key: 'vitaminC', unit: 'mg', limit: 90, type: 'target', desc: 'Günlük önerilen hedef (90 mg)', color: '#fbbf24', alertColor: '#10b981' },
+    { name: 'Demir', key: 'iron', unit: 'mg', limit: 18, type: 'target', desc: 'Günlük önerilen hedef (18 mg)', color: '#ec4899', alertColor: '#10b981' },
   ];
 
   return (
@@ -150,7 +230,7 @@ const NutritionJournal = () => {
           </h1>
           
           <p style={{ color: '#cbd5e1', fontSize: '1.2rem', maxWidth: '600px', lineHeight: '1.6', marginTop: '15px', marginBottom: '25px' }}>
-            Günlük makrolarını takip et, hedefine ulaş. Her öğün seni zirveye bir adım daha yaklaştırır.
+            Günlük makrolarını ve mikro besin değerlerini takip et, hedefine sağlıklı adımlarla ulaş.
           </p>
 
           <button 
@@ -173,9 +253,11 @@ const NutritionJournal = () => {
         formData={formData}
         setFormData={setFormData}
         handleAddMeal={handleAddMeal}
+        handleImageUpload={handleImageUpload}
+        isAnalyzingImage={isAnalyzingImage}
       />
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 0.6fr', gap: '30px' }} className="responsive-grid">
+      <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: '30px' }} className="responsive-grid">
         
         {/* Progress & Charts */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
@@ -183,10 +265,63 @@ const NutritionJournal = () => {
            <MealHistoryList meals={meals} handleDeleteMeal={handleDeleteMeal} />
         </div>
 
-        {/* Macros Pie Card */}
+        {/* Macros & Micros Analysis Side Block */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
            <MacroPieChart macroData={macroData} />
 
+           {/* PREMIUM DETAILED MICRO-NUTRIENT TRACKER */}
+           <div className="glass-panel" style={{ padding: '30px', position: 'relative' }}>
+              <h3 style={{ marginBottom: '20px', fontSize: '1.25rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Activity size={20} color="var(--primary)" /> Mikro Besin Analizi
+              </h3>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                {microsList.map((m) => {
+                  const currentVal = sums[m.key] || 0;
+                  const percent = Math.min(100, (currentVal / m.limit) * 100);
+                  const isExceeded = m.type === 'limit' && currentVal > m.limit;
+                  const color = isExceeded ? m.alertColor : m.color;
+
+                  return (
+                    <div key={m.key} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', fontWeight: 700 }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-main)' }}>
+                          {m.key === 'caffeine' && <Coffee size={14} color={color} />}
+                          {m.name}
+                        </span>
+                        <span style={{ color: isExceeded ? m.alertColor : 'var(--text-muted)' }}>
+                          {currentVal} / {m.limit} {m.unit}
+                        </span>
+                      </div>
+                      
+                      {/* Interactive Custom Progress Bar */}
+                      <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px', overflow: 'hidden', position: 'relative', border: '1px solid rgba(255,255,255,0.03)' }}>
+                        <div style={{ 
+                          width: `${percent}%`, 
+                          height: '100%', 
+                          background: color, 
+                          borderRadius: '4px',
+                          transition: 'width 1s ease-in-out',
+                          boxShadow: isExceeded ? `0 0 10px ${m.alertColor}` : 'none'
+                        }}></div>
+                      </div>
+
+                      {/* Warnings or Descriptions */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: 'var(--text-muted)', opacity: 0.8 }}>
+                        <span>{m.desc}</span>
+                        {isExceeded && (
+                          <span style={{ color: m.alertColor, fontWeight: 800, display: 'flex', alignItems: 'center', gap: '3px' }}>
+                            <ShieldAlert size={11} /> Sınır Aşıldı!
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+           </div>
+
+           {/* Total Calories Summary */}
            <div className="glass-panel" style={{ padding: '30px', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: '-15px', right: '-15px', opacity: 0.05 }}>
                  <Info size={100} color="var(--primary)" />

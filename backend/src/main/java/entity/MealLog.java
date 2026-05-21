@@ -34,6 +34,13 @@ public class MealLog {
     private Integer carbs;
     private Integer fats;
 
+    private Integer sodium;
+    private Integer potassium;
+    private Integer calcium;
+    private Integer caffeine;
+    private Integer vitaminC;
+    private Integer iron;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

@@ -536,3 +536,87 @@ body.workout-mode-active .container {
   padding: 0 !important;
   margin: 0 !important;
 }
+
+/* ==========================================================================
+   MOBILE & PWA RESPONSIVENESS (Screens under 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* Layout Adjustments */
+  .main-layout {
+    flex-direction: column !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow-x: hidden !important;
+  }
+
+  .sidebar-container {
+    display: none !important; /* Hide desktop sidebar */
+  }
+
+  .content-area {
+    padding: 16px 16px 105px !important; /* Extra bottom padding for mobile navigation bar */
+    width: 100% !important;
+    overflow-y: visible !important;
+    height: auto !important;
+  }
+
+  .container {
+    padding: 0 !important;
+  }
+
+  /* Grid Layouts to Single Column */
+  .responsive-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+
+  .responsive-form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 15px !important;
+  }
+
+  /* Typography scale down */
+  h1 {
+    font-size: 2.2rem !important;
+  }
+  h2 {
+    font-size: 1.8rem !important;
+  }
+
+  /* Compact glass panels for small screens */
+  .glass-panel {
+    padding: 20px !important;
+    border-radius: 20px !important;
+  }
+
+  /* Hero Panels scaling */
+  header.premium-glass-dark {
+    padding: 30px 20px !important;
+    border-radius: 24px !important;
+    margin-bottom: 30px !important;
+  }
+
+  header.premium-glass-dark h1 {
+    font-size: 2.2rem !important;
+  }
+
+  header.premium-glass-dark p {
+    font-size: 1rem !important;
+  }
+
+  /* Navbar Responsive Classes */
+  .navbar-logo-mobile {
+    display: flex !important;
+  }
+  .navbar-username {
+    display: none !important;
+  }
+  .navbar-logout-text {
+    display: none !important;
+  }
+  .navbar-profile-container {
+    padding: 6px !important;
+    border-radius: 12px !important;
+    gap: 0 !important;
+  }
+}

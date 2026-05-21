@@ -144,9 +144,27 @@ const ExerciseDisplay = ({
             }}>
               {currentExercise?.exerciseName || (currentStep === 'warmup' ? "Isınma" : "Egzersiz")}
             </h2>
-            <div style={{ display: 'flex', gap: '20px', marginTop: '15px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '20px', marginTop: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
               <span className="workout-badge workout-badge-primary" style={{ fontSize: '0.9rem', padding: '6px 16px', fontWeight: 900 }}>{currentExercise?.targetMuscle?.toUpperCase()}</span>
               <span style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>{currentStep === 'warmup' ? `${warmupIdx + 1} / ${warmupExercises.length}` : `${exerciseIdx + 1} / ${exercises.length}`}</span>
+              {currentStep === 'exercise' && currentExercise?.isAlternative && (
+                <span style={{ 
+                  fontSize: '0.75rem', 
+                  color: '#38bdf8', 
+                  background: 'rgba(14, 165, 233, 0.12)', 
+                  border: '1px solid rgba(14, 165, 233, 0.3)', 
+                  borderRadius: '10px', 
+                  padding: '6px 14px', 
+                  fontWeight: 800, 
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 0 15px rgba(14, 165, 233, 0.1)',
+                  lineHeight: '1.2'
+                }}>
+                  🛡️ AI Güvenlik Filtresi: {currentExercise.injuryReason || 'Sakatlık Önleme'} alternatifi
+                </span>
+              )}
             </div>
           </div>
           <div style={{ flexShrink: 0 }}>

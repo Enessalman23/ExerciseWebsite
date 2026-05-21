@@ -60,8 +60,9 @@ const Register = () => {
       {/* Sağ Taraf: Form */}
       <div className="split-right">
         <div className="auth-form-container animate-fade-in glass-panel" style={{ padding: '48px', borderRadius: '32px' }}>
-          <div style={{ marginBottom: '40px' }}>
-            <h1 className="text-glow" style={{ fontSize: '2.5rem', marginBottom: '12px' }}>Kayıt Ol</h1>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '32px' }}>
+            <img src="/pwa-512x512.png" alt="EA Logo" style={{ width: '80px', height: '80px', borderRadius: '20px', marginBottom: '16px', boxShadow: '0 8px 25px var(--primary-glow)', border: '1px solid rgba(255, 255, 255, 0.1)' }} />
+            <h1 className="text-glow" style={{ fontSize: '2.5rem', marginBottom: '8px' }}>Kayıt Ol</h1>
             <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Saniyeler içinde hesabını oluştur.</p>
           </div>
           

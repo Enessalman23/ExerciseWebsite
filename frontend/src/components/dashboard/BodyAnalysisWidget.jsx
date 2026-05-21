@@ -25,16 +25,16 @@ const BodyAnalysisWidget = ({ metrics, healthStats }) => {
             <Link to="/metrics" className="btn btn-primary premium-shadow" style={{ width: '100%' }}>Profilini Tamamla</Link>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-            <div className="glass-panel" style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div className="glass-panel" style={{ padding: '20px', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>BMI Endeksi</div>
               <div className="text-glow" style={{ fontSize: '2.8rem', fontWeight: 900, color: healthStats?.category?.color, lineHeight: 1.1 }}>{healthStats?.bmi}</div>
               <div style={{ display: 'inline-block', marginTop: '12px', padding: '4px 12px', background: `${healthStats?.category?.color || '#ccc'}20`, color: healthStats?.category?.color, borderRadius: '8px', fontSize: '0.75rem', fontWeight: 800 }}>
                 {healthStats?.category?.label}
               </div>
             </div>
-            <div className="glass-panel" style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Günlük TDEE</div>
+            <div className="glass-panel" style={{ padding: '20px', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Günlük kalori</div>
               <div className="text-glow" style={{ fontSize: '2.8rem', fontWeight: 900, color: 'var(--secondary)', lineHeight: 1.1 }}>{healthStats?.tdee}</div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, marginTop: '12px' }}>
                 Bazal: <span style={{ color: 'var(--text-main)' }}>{healthStats?.bmr} kcal</span>

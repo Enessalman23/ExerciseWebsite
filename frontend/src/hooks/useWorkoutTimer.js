@@ -11,11 +11,15 @@ export const useWorkoutTimer = (onTimerComplete) => {
 
   useEffect(() => {
     let interval = null;
-    if (isTimerActive && restTimer > 0) {
+    if (isTimerActive) {
       interval = setInterval(() => {
         setRestTimer(prev => {
           if (prev <= 1) {
             clearInterval(interval);
+            setTimeout(() => {
+              setIsTimerActive(false);
+              if (onCompleteRef.current) onCompleteRef.current();
+            }, 0);
             return 0;
           }
           return prev - 1;
@@ -23,15 +27,7 @@ export const useWorkoutTimer = (onTimerComplete) => {
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isTimerActive, restTimer > 0]); // Only re-run when activity state changes
-
-  // Separate effect to handle completion to avoid race conditions
-  useEffect(() => {
-    if (isTimerActive && restTimer === 0) {
-      setIsTimerActive(false);
-      if (onCompleteRef.current) onCompleteRef.current();
-    }
-  }, [isTimerActive, restTimer]);
+  }, [isTimerActive]);
 
   const startTimer = useCallback((seconds) => {
     const validSeconds = Math.max(1, seconds || 60);

@@ -10,7 +10,7 @@ import Metrics from './pages/Metrics';
 const ProtectedRoute = ({ children }) => {
   const user = useAuthStore((state) => state.user);
   const loading = useAuthStore((state) => state.loading);
-  
+
   if (loading) {
     return (
       <div className="flex justify-center items-center" style={{ minHeight: '100vh' }}>
@@ -18,11 +18,11 @@ const ProtectedRoute = ({ children }) => {
       </div>
     );
   }
-  
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }
-  
+
   return children;
 };
 
@@ -35,7 +35,6 @@ import NutritionJournal from './pages/NutritionJournal';
 import ProgressPhotos from './pages/ProgressPhotos';
 import AiPoseCoach from './pages/AiPoseCoach';
 import Layout from './components/Layout';
-import AchievementSystem from './components/AchievementSystem';
 
 import { ToastProvider } from './context/ToastContext';
 
@@ -46,28 +45,27 @@ function App() {
 
   return (
     <ToastProvider>
-        <AchievementSystem />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            
-            <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/metrics" element={<Metrics />} />
-              <Route path="/bmr" element={<BMRCalculator />} />
-              <Route path="/workouts" element={<Workouts />} />
-              <Route path="/diet" element={<Diet />} />
-              <Route path="/coach" element={<Coach />} />
-              <Route path="/recipe" element={<AiRecipe />} />
-              <Route path="/journal" element={<NutritionJournal />} />
-              <Route path="/progress-photos" element={<ProgressPhotos />} />
-              <Route path="/ai-pose-coach" element={<AiPoseCoach />} />
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </ToastProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/metrics" element={<Metrics />} />
+            <Route path="/bmr" element={<BMRCalculator />} />
+            <Route path="/workouts" element={<Workouts />} />
+            <Route path="/diet" element={<Diet />} />
+            <Route path="/coach" element={<Coach />} />
+            <Route path="/recipe" element={<AiRecipe />} />
+            <Route path="/journal" element={<NutritionJournal />} />
+            <Route path="/progress-photos" element={<ProgressPhotos />} />
+            <Route path="/ai-pose-coach" element={<AiPoseCoach />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </ToastProvider>
   );
 }
 

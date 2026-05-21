@@ -4,19 +4,20 @@ import {
 } from 'lucide-react';
 import { GOAL_OPTIONS, equipmentsList, EXPERIENCE_LEVELS } from '../../constants/workoutConstants.jsx';
 
+const MESSAGES = [
+  "Yapay Zeka hedeflerinizi analiz ediyor...",
+  "Kas grupları için en iyi egzersizler seçiliyor...",
+  "Size özel set ve tekrar sayıları belirleniyor...",
+  "Programınız optimize ediliyor, az kaldı!"
+];
+
 const LoadingOverlay = ({ isVisible }) => {
   const [messageIdx, setMessageIdx] = useState(0);
-  const messages = [
-    "Yapay Zeka hedeflerinizi analiz ediyor...",
-    "Kas grupları için en iyi egzersizler seçiliyor...",
-    "Size özel set ve tekrar sayıları belirleniyor...",
-    "Programınız optimize ediliyor, az kaldı!"
-  ];
 
   useEffect(() => {
     if (!isVisible) return;
     const interval = setInterval(() => {
-      setMessageIdx(prev => (prev + 1) % messages.length);
+      setMessageIdx(prev => (prev + 1) % MESSAGES.length);
     }, 3000);
     return () => clearInterval(interval);
   }, [isVisible]);
@@ -45,7 +46,7 @@ const LoadingOverlay = ({ isVisible }) => {
         <Brain color="var(--primary)" /> Programın Hazırlanıyor
       </h3>
       <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', maxWidth: '300px', height: '3em' }}>
-        {messages[messageIdx]}
+        {MESSAGES[messageIdx]}
       </p>
 
       <div style={{ width: '200px', height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', marginTop: '40px', overflow: 'hidden' }}>

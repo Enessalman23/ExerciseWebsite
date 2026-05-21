@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Dumbbell, Apple, Activity, Calculator, MessageSquare, Trophy, Camera, Scan, Utensils } from 'lucide-react';
+import { Home, Dumbbell, Apple, Activity, Calculator, MessageSquare, Camera, Scan, Utensils } from 'lucide-react';
 
 const Sidebar = () => {
   const navItems = [
@@ -36,24 +36,27 @@ const Sidebar = () => {
         backdropFilter: 'blur(20px)',
         boxShadow: 'var(--shadow)'
       }}>
-        <div style={{ padding: '0 15px', marginBottom: '30px' }}>
-          <h2 className="text-glow" style={{ fontSize: '1.4rem', color: 'var(--text-main)', fontWeight: 800, letterSpacing: '1px' }}>
-            MENU
-          </h2>
-          <div style={{ width: '40px', height: '3px', background: 'var(--primary)', borderRadius: '2px', marginTop: '8px' }}></div>
+        <div style={{ padding: '0 10px', marginBottom: '35px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <img src="/pwa-192x192.png" alt="EA Logo" style={{ width: '42px', height: '42px', borderRadius: '12px', boxShadow: '0 4px 15px var(--primary-glow)' }} />
+          <div>
+            <h2 className="text-glow" style={{ fontSize: '1.15rem', color: 'var(--text-main)', fontWeight: 900, letterSpacing: '0.5px', margin: 0, lineHeight: 1.1 }}>
+              EGZERSİZ
+            </h2>
+            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--primary)', letterSpacing: '2px', textTransform: 'uppercase' }}>Asistanı</span>
+          </div>
         </div>
 
-        <nav style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
+        <nav style={{
+          display: 'flex',
+          flexDirection: 'column',
           gap: '6px',
           overflowY: 'auto',
           paddingRight: '5px',
           flex: 1
         }} className="custom-scrollbar">
           {navItems.map(item => (
-            <NavLink 
-              key={item.name} 
+            <NavLink
+              key={item.name}
               to={item.path}
               className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}
               style={({ isActive }) => ({
@@ -79,11 +82,11 @@ const Sidebar = () => {
           ))}
         </nav>
 
-        <div style={{ 
-          marginTop: '20px', 
-          padding: '20px', 
-          borderRadius: '20px', 
-          background: 'rgba(255, 255, 255, 0.03)', 
+        <div style={{
+          marginTop: '20px',
+          padding: '20px',
+          borderRadius: '20px',
+          background: 'rgba(255, 255, 255, 0.03)',
           border: '1px solid rgba(255, 255, 255, 0.05)',
           textAlign: 'center'
         }}>

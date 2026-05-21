@@ -39,7 +39,7 @@ const DietCard = ({
                    {plan.planName || `Plan #${historyCount - index}`}
                 </h4>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
-                    <Clock size={14} /> {new Date(plan.createdAt || Date.now()).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    <Clock size={14} /> {plan.createdAt ? new Date(plan.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Bilinmeyen Tarih'}
                 </span>
             </div>
         </div>

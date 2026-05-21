@@ -93,10 +93,12 @@ const AnatomyExplorer = ({
   getImageUrl
 }) => {
   const [detailExerciseLocal, setDetailExerciseLocal] = useState(null);
+  const [prevMuscle, setPrevMuscle] = useState(selectedMuscle);
 
-  useEffect(() => {
+  if (selectedMuscle !== prevMuscle) {
+    setPrevMuscle(selectedMuscle);
     setDetailExerciseLocal(null);
-  }, [selectedMuscle]);
+  }
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: '30px', marginBottom: '40px' }} className="responsive-grid">

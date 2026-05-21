@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React from 'react';
 import { X } from 'lucide-react';
-import { useWorkoutTimer } from '../hooks/useWorkoutTimer';
+import { useWorkoutPlayer } from '../hooks/useWorkoutPlayer';
 import ExerciseDisplay from './workout/ExerciseDisplay';
 import WorkoutPlayerHeader from './workout/WorkoutPlayerHeader';
 import WorkoutPlayerInstructions from './workout/WorkoutPlayerInstructions';
 import WorkoutPlayerControls from './workout/WorkoutPlayerControls';
-import { useVoiceGuidance } from '../hooks/useVoiceGuidance';
 
 const WorkoutPlayer = ({ plan, onClose }) => {
+  const player = useWorkoutPlayer(plan, onClose);
+
   // Safety check FIRST to prevent crashes
-  if (!plan || !plan.days || plan.days.length === 0) {
+  if (!plan || !plan.days || plan.days.length === 0 || !player.currentDay) {
     return (
       <div className="modal-overlay" style={{ background: 'var(--bg-color)', zIndex: 9999 }}>
         <div className="glass-panel text-center" style={{ padding: '60px', maxWidth: '500px' }}>
@@ -22,165 +23,32 @@ const WorkoutPlayer = ({ plan, onClose }) => {
     );
   }
 
-  const [currentDayIdx, setCurrentDayIdx] = useState(() => {
-    try {
-      const startIdx = plan?.startDayIdx || 0;
-      return (plan?.days && startIdx >= 0 && startIdx < plan.days.length) ? startIdx : 0;
-    } catch (e) { return 0; }
-  });
-
-  const currentDay = (plan?.days && plan.days[currentDayIdx]) || (plan?.days && plan.days[0]) || null;
-  const warmupExercises = currentDay?.warmupExercises || [];
-  const exercises = currentDay?.exercises || [];
-
-  const [currentStep, setCurrentStep] = useState(warmupExercises.length > 0 ? 'warmup' : 'exercise');
-  const [exerciseIdx, setExerciseIdx] = useState(0);
-  const [warmupIdx, setWarmupIdx] = useState(0);
-  
-  // Kalıcı ilerleme takibi için localStorage kullanıyoruz
-  const storageKey = `completed_days_${plan.workoutPlanId || 'default'}`;
-  const [completedDays, setCompletedDays] = useState(() => {
-    const saved = localStorage.getItem(storageKey);
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  // Tamamlanan günleri kaydet
-  useEffect(() => {
-    if (currentStep === 'finished' && !completedDays.includes(currentDayIdx)) {
-      const newCompleted = [...completedDays, currentDayIdx];
-      setCompletedDays(newCompleted);
-      localStorage.setItem(storageKey, JSON.stringify(newCompleted));
-    }
-  }, [currentStep, currentDayIdx, completedDays, storageKey]);
-
-  // Safety return if still no data
-  if (!currentDay) {
-    return (
-      <div className="modal-overlay" style={{ background: 'var(--bg-color)', zIndex: 9999 }}>
-        <div className="glass-panel text-center" style={{ padding: '60px' }}>
-          <h2>Hata</h2>
-          <p>Seçilen güne ait veri bulunamadı.</p>
-          <button onClick={onClose} className="btn btn-primary">Kapat</button>
-        </div>
-      </div>
-    );
-  }
-
-  const currentWarmup = warmupExercises[warmupIdx];
-  const currentExercise = currentStep === 'warmup' ? currentWarmup : exercises[exerciseIdx];
-
-
-
-  const handleStepNextRef = useRef();
-  const startTimerRef = useRef();
-
-  const handleStepNext = useCallback(() => {
-    if (currentStep === 'warmup') {
-      if (warmupIdx < warmupExercises.length - 1) {
-        setWarmupIdx(prev => prev + 1);
-      } else {
-        setCurrentStep('exercise');
-        setExerciseIdx(0);
-      }
-    } else if (currentStep === 'exercise') {
-      const restVal = currentExercise?.rest;
-      const restSec = (restVal !== null && restVal !== undefined && !isNaN(parseInt(restVal))) ? parseInt(restVal) : 60;
-      setCurrentStep('rest');
-      if (startTimerRef.current) startTimerRef.current(restSec);
-    } else if (currentStep === 'rest') {
-      if (exerciseIdx < exercises.length - 1) {
-        setExerciseIdx(prev => prev + 1);
-        setCurrentStep('exercise');
-      } else {
-        setCurrentStep('finished');
-      }
-    }
-  }, [currentStep, warmupIdx, warmupExercises.length, currentExercise, exercises.length, exerciseIdx]);
-
-  handleStepNextRef.current = handleStepNext;
-
-  const { restTimer, startTimer, stopTimer, skipTimer } = useWorkoutTimer(() => handleStepNextRef.current());
-  startTimerRef.current = startTimer;
-
-  // Cleanup timer on day change or unmount
-  useEffect(() => {
-    return () => stopTimer();
-  }, [currentDayIdx, stopTimer]);
-
-
-  const getImageUrl = (path) => {
-    if (!path) return '';
-    if (!path.includes('gifs_360x360')) {
-        return `http://localhost:8080/exercise-images/${path}`;
-    }
-    return `http://localhost:8080/gifs/gifs_360x360/${path}`;
-  };
-
-  const totalActions = warmupExercises.length + exercises.length;
-  const currentActionIdx = currentStep === 'warmup' ? warmupIdx : warmupExercises.length + exerciseIdx;
-  const progressPercentage = ((currentActionIdx + (currentStep === 'rest' || currentStep === 'finished' ? 1 : 0.5)) / totalActions) * 100;
-  
-  const [isFocused, setIsFocused] = useState(true);
-  const [isMuted, setIsMuted] = useState(false);
-  const { speak, stop } = useVoiceGuidance();
-
-  // Voice Guidance Effect
-  useEffect(() => {
-    if (isMuted) return;
-    if (currentStep === 'warmup' && currentWarmup) {
-      speak(`Isınma hareketi: ${currentWarmup.exerciseName}`);
-    } else if (currentStep === 'exercise' && currentExercise) {
-      speak(`Sıradaki hareket: ${currentExercise.exerciseName}`);
-    } else if (currentStep === 'rest') {
-      speak("Dinlenme zamanı");
-    } else if (currentStep === 'finished') {
-      speak("Antrenman başarıyla bitti, harika bir iş çıkardın!");
-    }
-  }, [currentStep, warmupIdx, exerciseIdx, speak, isMuted]);
-
-  // Countdown Voice Effect
-  useEffect(() => {
-    if (isMuted) return;
-    if (currentStep === 'rest') {
-      if (restTimer === 3) speak("3");
-      else if (restTimer === 2) speak("2");
-      else if (restTimer === 1) speak("1");
-    }
-  }, [restTimer, currentStep, speak, isMuted]);
-
-  // Mute toggle effect
-  useEffect(() => {
-    if (isMuted) {
-      stop();
-    }
-  }, [isMuted, stop]);
-
-  useEffect(() => {
-    document.body.classList.add('workout-mode-active');
-    
-    // Safety check for fullscreen if it didn't trigger on click
-    if (!document.fullscreenElement) {
-      try {
-        document.documentElement.requestFullscreen().catch(() => {});
-      } catch (e) {}
-    }
-
-    return () => {
-      document.body.classList.remove('workout-mode-active');
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {});
-      }
-    };
-  }, []);
-
-  const toggleFullScreen = () => {
-    // Keep it simple or remove if truly not needed, but keeping for escape hatches
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-    } else {
-      document.exitFullscreen().catch(() => {});
-    }
-  };
+  const {
+    currentDayIdx,
+    setCurrentDayIdx,
+    currentDay,
+    warmupExercises,
+    exercises,
+    currentStep,
+    setCurrentStep,
+    exerciseIdx,
+    setExerciseIdx,
+    setWarmupIdx,
+    warmupIdx,
+    completedDays,
+    currentWarmup,
+    currentExercise,
+    getImageUrl,
+    progressPercentage,
+    isFocused,
+    isMuted,
+    setIsMuted,
+    restTimer,
+    skipTimer,
+    stopTimer,
+    toggleFullScreen,
+    handleStepNext
+  } = player;
 
   return (
     <div className="animate-fade-in" style={{ 
@@ -221,7 +89,6 @@ const WorkoutPlayer = ({ plan, onClose }) => {
           warmupExercises={warmupExercises}
           toggleFullScreen={toggleFullScreen}
           isFocused={isFocused}
-          setIsFocused={setIsFocused}
           isMuted={isMuted}
           setIsMuted={setIsMuted}
         />
