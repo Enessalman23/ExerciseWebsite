@@ -4,7 +4,6 @@ import config.CurrentUser;
 import dto.request.AiWorkoutRequest;
 import dto.response.AiWorkoutResponse;
 import entity.User;
-import entity.WorkoutPlan;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,13 +14,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import repository.WorkoutPlanRepository;
 import service.AiCoachService;
 import service.AiGenerationService;
 import service.NutritionService;
+import service.WorkoutPlanService;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import service.AiFeedbackService;
 import service.AiRecipeService;
@@ -37,7 +35,7 @@ public class AiController {
     private final AiGenerationService aiGenerationService;
     private final AiCoachService aiCoachService;
     private final NutritionService nutritionService;
-    private final WorkoutPlanRepository workoutPlanRepository;
+    private final WorkoutPlanService workoutPlanService;
     private final AiRecipeService aiRecipeService;
     private final AiFeedbackService aiFeedbackService;
 
@@ -51,27 +49,17 @@ public class AiController {
 
     @GetMapping("/my-workouts")
     public ResponseEntity<List<AiWorkoutResponse>> getWorkoutHistory(@CurrentUser User user) {
-        List<WorkoutPlan> plans = workoutPlanRepository.findByUserOrderByCreatedAtDesc(user);
-
-        List<AiWorkoutResponse> response = plans.stream()
-                .map(plan -> new AiWorkoutResponse(plan.getId(), plan.getGeneratedPlanJson(), "Plan retrieved",
-                        plan.getPlanName()))
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(workoutPlanService.getAiWorkoutHistory(user));
     }
 
     @DeleteMapping("/workout/{id}")
     public ResponseEntity<?> deleteWorkout(@PathVariable Long id, @CurrentUser User user) {
-        return workoutPlanRepository.findById(id)
-                .map(plan -> {
-                    if (!plan.getUser().getId().equals(user.getId())) {
-                        return ResponseEntity.status(403).body("Unauthorized to delete this plan");
-                    }
-                    workoutPlanRepository.delete(plan);
-                    return ResponseEntity.ok("Workout plan deleted successfully");
-                })
-                .orElse(ResponseEntity.status(404).body("Plan not found"));
+        boolean deleted = workoutPlanService.deleteWorkout(id, user);
+        if (deleted) {
+            return ResponseEntity.ok("Workout plan deleted successfully");
+        } else {
+            return ResponseEntity.status(404).body("Plan not found or unauthorized");
+        }
     }
 
     @PostMapping("/coach")

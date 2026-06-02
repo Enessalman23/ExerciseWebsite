@@ -26,11 +26,31 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+import AdminPanel from './pages/AdminPanel';
+
+const AdminRoute = ({ children }) => {
+  const user = useAuthStore((state) => state.user);
+  const loading = useAuthStore((state) => state.loading);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center" style={{ minHeight: '100vh' }}>
+        <div className="spinner"></div>
+      </div>
+    );
+  }
+
+  if (!user || user.role !== 'ADMIN') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+};
+
 import Workouts from './pages/Workouts';
 import Diet from './pages/Diet';
 import BMRCalculator from './pages/BMRCalculator';
 import Coach from './pages/Coach';
-import AiRecipe from './pages/AiRecipe';
 import NutritionJournal from './pages/NutritionJournal';
 import ProgressPhotos from './pages/ProgressPhotos';
 import AiPoseCoach from './pages/AiPoseCoach';
@@ -57,10 +77,10 @@ function App() {
             <Route path="/workouts" element={<Workouts />} />
             <Route path="/diet" element={<Diet />} />
             <Route path="/coach" element={<Coach />} />
-            <Route path="/recipe" element={<AiRecipe />} />
             <Route path="/journal" element={<NutritionJournal />} />
             <Route path="/progress-photos" element={<ProgressPhotos />} />
             <Route path="/ai-pose-coach" element={<AiPoseCoach />} />
+            <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>
         </Routes>

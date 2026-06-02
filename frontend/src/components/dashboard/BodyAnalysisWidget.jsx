@@ -47,4 +47,4 @@ const BodyAnalysisWidget = ({ metrics, healthStats }) => {
   );
 };
 
-export default BodyAnalysisWidget;
+export default React.memo(BodyAnalysisWidget);

@@ -83,6 +83,8 @@ const ExerciseDetailView = ({ exercise, onBack, getImageUrl }) => {
   );
 };
 
+const ExerciseDetailViewMemo = React.memo(ExerciseDetailView);
+
 const AnatomyExplorer = ({
   viewModel,
   setViewModel,
@@ -147,7 +149,7 @@ const AnatomyExplorer = ({
              <p>Kas haritasından bir bölge seçerek profesyonel hareketleri gör.</p>
           </div>
         ) : detailExerciseLocal ? (
-          <ExerciseDetailView 
+          <ExerciseDetailViewMemo 
             exercise={detailExerciseLocal} 
             onBack={() => setDetailExerciseLocal(null)} 
             getImageUrl={getImageUrl} 
@@ -203,4 +205,4 @@ const AnatomyExplorer = ({
   );
 };
 
-export default AnatomyExplorer;
+export default React.memo(AnatomyExplorer);

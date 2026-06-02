@@ -121,7 +121,16 @@ export const useAiPoseCoach = () => {
     const angle = getSmoothedAngle(rawAngle);
     const mState = stateRef.current.movementState;
     
+    // Hip angle check to ensure the user is standing vertically and not sitting down or bending forward excessively
+    const shoulderIndex = indices[0] === 23 ? 11 : 12;
+    const shoulder = landmarks[shoulderIndex];
+    const hipAngle = calculateAngle(shoulder, hip, knee);
+
     if (angle > 165) {
+      if (hipAngle < 130) {
+        setFeedback("Lütfen tam doğrulun (Gövdenizi dikleştirin).");
+        return;
+      }
       if (mState === 'down') {
         registerRep();
         stateRef.current.movementState = 'up';
@@ -150,6 +159,23 @@ export const useAiPoseCoach = () => {
     const elbow = landmarks[indices[1]];
     const wrist = landmarks[indices[2]];
 
+    // Torso angle guard to prevent counting arm movements while sitting/standing straight
+    const hipIndex = indices[0] === 11 ? 23 : 24;
+    const hip = landmarks[hipIndex];
+    if (hip) {
+      const deltaX = Math.abs(shoulder.x - hip.x);
+      const deltaY = Math.abs(shoulder.y - hip.y);
+      // Normalized coordinates adjusted for 640x480 resolution aspect ratio
+      const physicalDeltaY = deltaY * 480;
+      const physicalDeltaX = deltaX * 640;
+      
+      // If the vertical distance is much larger than horizontal distance, torso is vertical
+      if (physicalDeltaY > physicalDeltaX * 0.8) {
+        setFeedback("Lütfen şınav pozisyonu alın (Vücudunuzu yatay konuma getirin).");
+        return;
+      }
+    }
+
     const rawAngle = calculateAngle(shoulder, elbow, wrist);
     const angle = getSmoothedAngle(rawAngle);
     const mState = stateRef.current.movementState;
@@ -170,38 +196,7 @@ export const useAiPoseCoach = () => {
     }
   }, [getBestSide, calculateAngle, getSmoothedAngle, registerRep]);
 
-  // --- SIT-UP (MEKİK) ALGORITHM ---
-  const analyzeSitup = useCallback((landmarks) => {
-    const indices = getBestSide(landmarks, [11, 23, 25], [12, 24, 26]); // Shoulder, Hip, Knee
 
-    if (!indices) {
-       setFeedback("Gövdenizin ve dizlerinizin kamerada göründüğünden emin olun.");
-       return;
-    }
-
-    const shoulder = landmarks[indices[0]];
-    const hip = landmarks[indices[1]];
-    const knee = landmarks[indices[2]];
-
-    const rawAngle = calculateAngle(shoulder, hip, knee);
-    const angle = getSmoothedAngle(rawAngle);
-    const mState = stateRef.current.movementState;
-    
-    if (angle > 130) {
-      if (mState === 'up') {
-        registerRep();
-        stateRef.current.movementState = 'down';
-      }
-      setFeedback("Geriye doğru yat.");
-    } else if (angle < 60) {
-      if (mState === 'down') {
-        stateRef.current.movementState = 'up';
-      }
-      setFeedback("Harika! Şimdi yavaşça yat.");
-    } else {
-      setFeedback(mState === 'down' ? "Yukarı kalk..." : "Aşağı in...");
-    }
-  }, [getBestSide, calculateAngle, getSmoothedAngle, registerRep]);
 
   const onResults = useCallback((results) => {
     if (!canvasRef.current || !videoRef.current) return;
@@ -226,13 +221,12 @@ export const useAiPoseCoach = () => {
       const currentEx = stateRef.current.activeExercise;
       if (currentEx === 'squat') analyzeSquat(results.poseLandmarks);
       else if (currentEx === 'pushup') analyzePushup(results.poseLandmarks);
-      else if (currentEx === 'situp') analyzeSitup(results.poseLandmarks);
       
     } else {
       setFeedback("Vücut tespit edilemedi. Lütfen tam olarak kameraya girin.");
     }
     canvasCtx.restore();
-  }, [analyzeSquat, analyzePushup, analyzeSitup]);
+  }, [analyzeSquat, analyzePushup]);
 
   const initMediaPipe = useCallback(() => {
     if (!window.Pose) {

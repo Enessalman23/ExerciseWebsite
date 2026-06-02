@@ -9,8 +9,8 @@ export const useAuthStore = create((set) => ({
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const response = await axiosClient.get('/api/user/profile');
-        set({ user: { username: response.data.replace('Merhaba, ', '') }, loading: false });
+        const response = await axiosClient.get('/api/user/me');
+        set({ user: { username: response.data.username, role: response.data.role }, loading: false });
       } catch (error) {
         console.error("Token invalid or expired", error);
         localStorage.removeItem('token');
@@ -29,7 +29,7 @@ export const useAuthStore = create((set) => ({
       if (response.data.refreshToken) {
         localStorage.setItem('refreshToken', response.data.refreshToken);
       }
-      set({ user: { username } });
+      set({ user: { username, role: response.data.role } });
       return true;
     }
     return false;

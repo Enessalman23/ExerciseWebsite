@@ -9,5 +9,5 @@ import java.util.List;
 
 @Repository
 public interface ProgressPhotoRepository extends JpaRepository<ProgressPhoto, Long> {
-    List<ProgressPhoto> findByUserOrderByPhotoDateDesc(User user);
+    List<ProgressPhoto> findByUserOrderByIdDesc(User user);
 }

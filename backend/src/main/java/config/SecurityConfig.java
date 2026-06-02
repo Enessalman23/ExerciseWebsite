@@ -54,7 +54,8 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/gifs/**",
-                                "/exercise-images/**"
+                                "/exercise-images/**",
+                                "/api/progress-photos/images/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

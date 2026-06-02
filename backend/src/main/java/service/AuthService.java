@@ -43,7 +43,7 @@ public class AuthService {
         }
         String token = jwtUtil.generateToken(user.getUsername());
         String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
-        return new LoginResponse(token, refreshToken, user.getUsername(), "Login Successful");
+        return new LoginResponse(token, refreshToken, user.getUsername(), user.getRole().name(), "Login Successful");
     }
 
     public LoginResponse refreshToken(dto.request.TokenRefreshRequest request) {
@@ -57,10 +57,11 @@ public class AuthService {
         }
         
         if (jwtUtil.validateToken(requestRefreshToken, username)) {
+            User user = userRepository.findFirstByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
             String token = jwtUtil.generateToken(username);
-            // İsteğe bağlı olarak refresh token'ı da yenileyebilirsiniz
             String newRefreshToken = jwtUtil.generateRefreshToken(username);
-            return new LoginResponse(token, newRefreshToken, username, "Token refreshed successfully");
+            return new LoginResponse(token, newRefreshToken, username, user.getRole().name(), "Token refreshed successfully");
         }
         
         throw new RuntimeException("Refresh token is expired or invalid");

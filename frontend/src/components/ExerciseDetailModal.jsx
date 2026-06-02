@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Info, Target, Dumbbell, ListOrdered, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const ExerciseDetailModal = ({ exercise, onClose }) => {
+const ExerciseDetailModal = React.memo(({ exercise, onClose }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   const images = exercise?.images || [];

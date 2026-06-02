@@ -63,4 +63,4 @@ const ActiveDietWidget = ({ latestDiet }) => {
   );
 };
 
-export default ActiveDietWidget;
+export default React.memo(ActiveDietWidget);

@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axiosClient from '../api/axiosClient';
 import { Plus, Apple, Info, ShieldAlert, Coffee, Flame, Activity } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import NutritionAnalysisForm from '../components/diet/NutritionAnalysisForm';
 import { MacroBarChart, MacroPieChart } from '../components/diet/MacroCharts';
 import MealHistoryList from '../components/diet/MealHistoryList';
+import CalorieHistoryChart from '../components/dashboard/CalorieHistoryChart';
 
 const NutritionJournal = () => {
   const [meals, setMeals] = useState([]);
   const [targetDiet, setTargetDiet] = useState(null);
+  const [calorieHistory, setCalorieHistory] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
     foodName: '',
@@ -28,16 +30,23 @@ const NutritionJournal = () => {
   const [analysisQuery, setAnalysisQuery] = useState('');
   const { showToast } = useToast();
 
+  const healthStats = useMemo(() => ({
+    tdee: targetDiet?.targetDailyCalories || 2000
+  }), [targetDiet]);
+
   const fetchData = useCallback(async () => {
     try {
-      const [mealsRes, dietRes] = await Promise.all([
+      const [mealsRes, dietRes, historyRes] = await Promise.all([
         axiosClient.get('/api/meals'),
-        axiosClient.get('/api/diet/my-plans')
+        axiosClient.get('/api/diet/my-plans'),
+        axiosClient.get('/api/meals/history')
       ]);
       setMeals(mealsRes.data || []);
       if (dietRes.data && dietRes.data.length > 0) {
         setTargetDiet(dietRes.data[0]);
       }
+      const sortedHistory = (historyRes.data || []).sort((a, b) => new Date(a.date) - new Date(b.date));
+      setCalorieHistory(sortedHistory);
     } catch {
       showToast("Veriler yüklenemedi.", "error");
     }
@@ -47,7 +56,7 @@ const NutritionJournal = () => {
     fetchData();
   }, [fetchData]);
 
-  const sums = meals.reduce((acc, meal) => ({
+  const sums = useMemo(() => meals.reduce((acc, meal) => ({
     calories: acc.calories + (meal.calories || 0),
     protein: acc.protein + (meal.protein || 0),
     carbs: acc.carbs + (meal.carbs || 0),
@@ -61,7 +70,7 @@ const NutritionJournal = () => {
   }), { 
     calories: 0, protein: 0, carbs: 0, fats: 0, 
     sodium: 0, potassium: 0, calcium: 0, caffeine: 0, vitaminC: 0, iron: 0 
-  });
+  }), [meals]);
 
   const handleAnalyzeFood = async () => {
     if (!analysisQuery.trim()) {
@@ -178,18 +187,18 @@ const NutritionJournal = () => {
     }
   };
 
-  const macroData = [
+  const macroData = useMemo(() => [
     { name: 'Protein', value: sums.protein, color: '#4f46e5' },
     { name: 'Karbonhidrat', value: sums.carbs, color: '#0ea5e9' },
     { name: 'Yağ', value: sums.fats, color: '#f59e0b' },
-  ];
+  ], [sums.protein, sums.carbs, sums.fats]);
 
-  const compareData = [
+  const compareData = useMemo(() => [
     { name: 'Kalori', Alınan: sums.calories, Hedef: targetDiet?.targetDailyCalories || 2000 },
     { name: 'Protein', Alınan: sums.protein, Hedef: targetDiet?.targetProtein || 150 },
     { name: 'Karbonhidrat', Alınan: sums.carbs, Hedef: targetDiet?.targetCarbs || 250 },
     { name: 'Yağ', Alınan: sums.fats, Hedef: targetDiet?.targetFats || 70 },
-  ];
+  ], [sums.calories, sums.protein, sums.carbs, sums.fats, targetDiet]);
 
   // Daily Micro-Nutrient Limits & Targets
   const microsList = [
@@ -261,6 +270,9 @@ const NutritionJournal = () => {
         
         {/* Progress & Charts */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+           <div className="hover-glow" style={{ borderRadius: '24px' }}>
+              <CalorieHistoryChart calorieHistory={calorieHistory} healthStats={healthStats} />
+           </div>
            <MacroBarChart compareData={compareData} />
            <MealHistoryList meals={meals} handleDeleteMeal={handleDeleteMeal} />
         </div>

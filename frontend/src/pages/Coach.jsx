@@ -1,5 +1,5 @@
 import React from 'react';
-import { Send, User, Bot, Sparkles, Mic, Volume2, VolumeX, Target, Activity } from 'lucide-react';
+import { Send, User, Bot, Sparkles, Mic, Volume2, VolumeX, Target, Activity, ChefHat } from 'lucide-react';
 import { useCoachChat } from '../hooks/useCoachChat';
 
 const Coach = () => {
@@ -126,6 +126,9 @@ const Coach = () => {
              </button>
              <button onClick={() => setInput('Evde ekipmansız ne yapabilirim?')} className="btn-secondary" style={{ padding: '6px 14px', borderRadius: '10px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Activity size={14} color="#10b981" /> Ekipmansız Antrenman
+             </button>
+             <button onClick={() => setInput('Elimde şunlar var: [Malzemelerinizi yazınız] - Bana sağlıklı ve lezzetli bir tarif önerir misin?')} className="btn-secondary" style={{ padding: '6px 14px', borderRadius: '10px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <ChefHat size={14} color="#f59e0b" /> AI Şef (Tarif Önerisi)
              </button>
           </div>
 

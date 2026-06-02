@@ -39,4 +39,4 @@ const ActiveWorkoutWidget = ({ latestWorkout }) => {
   );
 };
 
-export default ActiveWorkoutWidget;
+export default React.memo(ActiveWorkoutWidget);

@@ -1,8 +1,19 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
 import { Flame } from 'lucide-react';
 
 const CalorieHistoryChart = ({ calorieHistory, healthStats }) => {
+  const chartData = useMemo(() => {
+    return calorieHistory.map(d => {
+      const dateObj = new Date(d.date + "T00:00:00");
+      return {
+        ...d,
+        DisplayDate: dateObj.toLocaleDateString('tr-TR', { weekday: 'short' }).toUpperCase(),
+        FullDate: dateObj.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })
+      };
+    });
+  }, [calorieHistory]);
+
   return (
     <div className="glass-panel animate-fade-in" style={{ padding: '30px', height: '100%', minHeight: '280px' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
@@ -21,14 +32,7 @@ const CalorieHistoryChart = ({ calorieHistory, healthStats }) => {
 
       <div style={{ height: '220px' }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={calorieHistory.map(d => {
-            const dateObj = new Date(d.date + "T00:00:00");
-            return {
-              ...d,
-              DisplayDate: dateObj.toLocaleDateString('tr-TR', { weekday: 'short' }).toUpperCase(),
-              FullDate: dateObj.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })
-            };
-          })}>
+          <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" opacity={0.3} />
             <XAxis 
               dataKey="DisplayDate" 
@@ -43,14 +47,14 @@ const CalorieHistoryChart = ({ calorieHistory, healthStats }) => {
                 if (active && payload && payload.length) {
                   return (
                     <div style={{ 
-                      background: 'var(--glass-bg)', 
-                      backdropFilter: 'blur(24px)', 
-                      WebkitBackdropFilter: 'blur(24px)', 
-                      padding: '15px 20px', 
-                      borderRadius: '20px', 
-                      border: '1px solid var(--glass-border)', 
-                      boxShadow: 'var(--shadow)', 
-                      minWidth: '160px' 
+                       background: 'var(--glass-bg)', 
+                       backdropFilter: 'blur(24px)', 
+                       WebkitBackdropFilter: 'blur(24px)', 
+                       padding: '15px 20px', 
+                       borderRadius: '20px', 
+                       border: '1px solid var(--glass-border)', 
+                       boxShadow: 'var(--shadow)', 
+                       minWidth: '160px' 
                     }}>
                       <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>{payload[0].payload.FullDate}</p>
                       <p style={{ margin: '8px 0 0', fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary)' }} className="text-glow-primary">
@@ -91,4 +95,4 @@ const CalorieHistoryChart = ({ calorieHistory, healthStats }) => {
   );
 };
 
-export default CalorieHistoryChart;
+export default React.memo(CalorieHistoryChart);

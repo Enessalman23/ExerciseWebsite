@@ -23,7 +23,6 @@ const AiPoseCoach = () => {
   const exerciseTips = {
     squat: "Tam derinlik için kalçanızın diz hizanızın altına indiğinden emin olun. (Diz açısı < 85°)",
     pushup: "Göğsünüzün yere iyice yaklaştığından ve kollarınızın tam açıldığından emin olun.",
-    situp: "Sırtınızın yere değdiğinden ve kalkarken dizlerinize yaklaştığınızdan emin olun.",
   };
 
   return (
@@ -41,14 +40,14 @@ const AiPoseCoach = () => {
 
       {/* Exercise Selector */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '30px', overflowX: 'auto', paddingBottom: '10px' }}>
-        {['squat', 'pushup', 'situp'].map((ex) => (
+        {['squat', 'pushup'].map((ex) => (
           <button 
             key={ex}
             onClick={() => handleExerciseChange(ex)}
             className={`btn ${activeExercise === ex ? 'btn-primary premium-shadow' : 'btn-secondary'}`}
             style={{ minWidth: '120px', textTransform: 'capitalize' }}
           >
-            <Dumbbell size={16} /> {ex === 'pushup' ? 'Şınav' : ex === 'situp' ? 'Mekik' : 'Squat'}
+            <Dumbbell size={16} /> {ex === 'pushup' ? 'Şınav' : 'Squat'}
           </button>
         ))}
       </div>

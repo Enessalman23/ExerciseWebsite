@@ -9,12 +9,11 @@ import { Link } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { useHealthStats } from '../hooks/useHealthStats';
-import CalorieHistoryChart from '../components/dashboard/CalorieHistoryChart';
+import AiTipCard from '../components/dashboard/AiTipCard';
 import AnatomyExplorer from '../components/dashboard/AnatomyExplorer';
 import BodyAnalysisWidget from '../components/dashboard/BodyAnalysisWidget';
 import ActiveDietWidget from '../components/dashboard/ActiveDietWidget';
 import ActiveWorkoutWidget from '../components/dashboard/ActiveWorkoutWidget';
-import WaterTrackerWidget from '../components/dashboard/WaterTrackerWidget';
 import WorkoutPlayer from '../components/WorkoutPlayer';
 
 
@@ -26,7 +25,6 @@ const Dashboard = () => {
   const [latestDiet, setLatestDiet] = useState(null);
   const [latestWorkout, setLatestWorkout] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [calorieHistory, setCalorieHistory] = useState([]);
 
   // Interactive Anatomy State
   const [viewModel, setViewModel] = useState('anterior');
@@ -39,17 +37,14 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [mRes, dRes, wRes, hRes] = await Promise.all([
+        const [mRes, dRes, wRes] = await Promise.all([
           axiosClient.get('/api/metrics'),
           axiosClient.get('/api/diet/my-plans'),
-          axiosClient.get('/api/ai/my-workouts'),
-          axiosClient.get('/api/meals/history')
+          axiosClient.get('/api/ai/my-workouts')
         ]);
         setMetrics(mRes.data);
         if (dRes.data && dRes.data.length > 0) setLatestDiet(dRes.data[0]);
         if (wRes.data && wRes.data.length > 0) setLatestWorkout(wRes.data[0]);
-        const sortedHistory = (hRes.data || []).sort((a, b) => new Date(a.date) - new Date(b.date));
-        setCalorieHistory(sortedHistory);
       } catch (error) {
         console.error("Failed to fetch dashboard data", error);
       } finally {
@@ -127,21 +122,16 @@ const Dashboard = () => {
       </div>
 
       {/* TOP STATS ROW */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '30px', marginBottom: '50px' }} className="responsive-grid">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '30px', marginBottom: '50px' }} className="responsive-grid">
 
         {/* BMI & TDEE */}
         <div className="hover-glow" style={{ borderRadius: '24px' }}>
           <BodyAnalysisWidget metrics={metrics} healthStats={healthStats} />
         </div>
 
-        {/* WATER TRACKER */}
+        {/* AI GOAL RECOMMENDATION CARD */}
         <div className="hover-glow" style={{ borderRadius: '24px' }}>
-          <WaterTrackerWidget />
-        </div>
-
-        {/* CALORIE HISTORY CHART */}
-        <div className="hover-glow" style={{ borderRadius: '24px' }}>
-          <CalorieHistoryChart calorieHistory={calorieHistory} healthStats={healthStats} />
+          <AiTipCard metrics={metrics} />
         </div>
       </div>
 

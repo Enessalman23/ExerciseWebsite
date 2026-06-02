@@ -1,20 +1,27 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { Home, Dumbbell, Apple, Activity, Calculator, MessageSquare, Camera, Scan, Utensils } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { Home, Dumbbell, Apple, Activity, Calculator, MessageSquare, Camera, Scan, Utensils, ShieldAlert } from 'lucide-react';
+import { useAuthStore } from '../store/authStore';
 
 const Sidebar = () => {
+  const user = useAuthStore((state) => state.user);
+  const navigate = useNavigate();
+  
   const navItems = [
     { name: 'Ana Sayfa', path: '/dashboard', icon: <Home size={20} /> },
     { name: 'Antrenmanlar', path: '/workouts', icon: <Dumbbell size={20} /> },
     { name: 'Diyet Planı', path: '/diet', icon: <Apple size={20} /> },
     { name: 'Beslenme Günlüğü', path: '/journal', icon: <Utensils size={20} /> },
     { name: 'AI Antrenör', path: '/coach', icon: <MessageSquare size={20} /> },
-    { name: 'AI Şef', path: '/recipe', icon: <Apple size={20} /> },
     { name: 'AI Form Koçu', path: '/ai-pose-coach', icon: <Scan size={20} /> },
     { name: 'Gelişim Fotoları', path: '/progress-photos', icon: <Camera size={20} /> },
     { name: 'Kalori (BMR)', path: '/bmr', icon: <Calculator size={20} /> },
     { name: 'Profilim', path: '/metrics', icon: <Activity size={20} /> },
   ];
+
+  if (user?.role === 'ADMIN') {
+    navItems.push({ name: 'Admin Paneli', path: '/admin', icon: <ShieldAlert size={20} /> });
+  }
 
   return (
     <aside className="sidebar-container" style={{
@@ -82,14 +89,20 @@ const Sidebar = () => {
           ))}
         </nav>
 
-        <div style={{
-          marginTop: '20px',
-          padding: '20px',
-          borderRadius: '20px',
-          background: 'rgba(255, 255, 255, 0.03)',
-          border: '1px solid rgba(255, 255, 255, 0.05)',
-          textAlign: 'center'
-        }}>
+        <div 
+          onClick={() => navigate('/coach')}
+          style={{
+            marginTop: '20px',
+            padding: '20px',
+            borderRadius: '20px',
+            background: 'rgba(255, 255, 255, 0.03)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            textAlign: 'center',
+            cursor: 'pointer',
+            transition: 'var(--transition)'
+          }}
+          className="hover-scale"
+        >
           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '5px' }}>Destek Hattı</div>
           <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>Hemen Soru Sor</div>
         </div>
