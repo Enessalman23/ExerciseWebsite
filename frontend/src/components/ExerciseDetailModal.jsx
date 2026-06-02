@@ -20,11 +20,12 @@ const ExerciseDetailModal = React.memo(({ exercise, onClose }) => {
 
   const getImageUrl = (path) => {
     if (!path) return '';
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
     // If it's a new dataset path (doesn't contain gifs_360x360)
     if (!path.includes('gifs_360x360')) {
-        return `http://localhost:8080/exercise-images/${path}`;
+        return `${baseUrl}/exercise-images/${path}`;
     }
-    return `http://localhost:8080/gifs/gifs_360x360/${path}`;
+    return `${baseUrl}/gifs/gifs_360x360/${path}`;
   };
 
   return (
@@ -159,6 +160,6 @@ const ExerciseDetailModal = React.memo(({ exercise, onClose }) => {
       </div>
     </div>
   );
-};
+});
 
 export default ExerciseDetailModal;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Users, Dumbbell, Apple, Utensils, Shield, Trash2, Edit2, ShieldAlert, Activity, RefreshCw } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import { useToast } from '../context/ToastContext';
@@ -24,7 +24,7 @@ const AdminPanel = () => {
     });
   }, [users]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const [statsRes, usersRes] = await Promise.all([
@@ -39,11 +39,11 @@ const AdminPanel = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const handleRoleToggle = async (userId, currentRole) => {
     const nextRole = currentRole === 'ADMIN' ? 'USER' : 'ADMIN';

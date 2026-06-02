@@ -78,10 +78,11 @@ const Dashboard = () => {
 
   const getImageUrl = (path) => {
     if (!path) return '';
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
     if (!path.includes('gifs_360x360')) {
-      return `http://localhost:8080/exercise-images/${path}`;
+      return `${baseUrl}/exercise-images/${path}`;
     }
-    return `http://localhost:8080/gifs/gifs_360x360/${path}`;
+    return `${baseUrl}/gifs/gifs_360x360/${path}`;
   };
 
   if (loading) {

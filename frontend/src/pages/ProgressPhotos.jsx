@@ -6,6 +6,8 @@ import ConfirmDialog from '../components/ConfirmDialog';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='250' height='250' viewBox='0 0 250 250'><rect width='100%' height='100%' fill='%231e293b'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='800' font-size='14' fill='%2394a3b8'>Resim Bulunamadi</text></svg>";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+
 const ProgressPhotos = () => {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -242,7 +244,7 @@ const ProgressPhotos = () => {
                   <div className="glass-panel" style={{ padding: '0', overflow: 'hidden', border: '1px solid var(--glass-border)', borderRadius: '20px' }}>
                     <div style={{ position: 'relative', height: '420px' }}>
                       <img 
-                        src={`http://localhost:8080${beforeObj.photoUrl}`} 
+                        src={`${API_URL}${beforeObj.photoUrl}`} 
                         alt="Before" 
                         style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#0f172a', display: 'block', borderRadius: '20px' }}
                         onError={(e) => { e.target.src = FALLBACK_IMAGE; }}
@@ -262,7 +264,7 @@ const ProgressPhotos = () => {
                   <div className="glass-panel" style={{ padding: '0', overflow: 'hidden', border: '1px solid var(--glass-border)', borderRadius: '20px' }}>
                     <div style={{ position: 'relative', height: '420px' }}>
                       <img 
-                        src={`http://localhost:8080${afterObj.photoUrl}`} 
+                        src={`${API_URL}${afterObj.photoUrl}`} 
                         alt="After" 
                         style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#0f172a', display: 'block', borderRadius: '20px' }}
                         onError={(e) => { e.target.src = FALLBACK_IMAGE; }}
@@ -298,7 +300,7 @@ const ProgressPhotos = () => {
                 }}>
                   {/* Underlay Image: After (Right side) */}
                   <img 
-                    src={`http://localhost:8080${afterObj.photoUrl}`} 
+                    src={`${API_URL}${afterObj.photoUrl}`} 
                     alt="After" 
                     style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'contain', borderRadius: '20px' }}
                     onError={(e) => { e.target.src = FALLBACK_IMAGE; }}
@@ -306,7 +308,7 @@ const ProgressPhotos = () => {
                   
                   {/* Overlay Image: Before (Left side, clipped) */}
                   <img 
-                    src={`http://localhost:8080${beforeObj.photoUrl}`} 
+                    src={`${API_URL}${beforeObj.photoUrl}`} 
                     alt="Before" 
                     style={{ 
                       position: 'absolute', 
@@ -569,7 +571,7 @@ const ProgressPhotos = () => {
             {photos.map(photo => (
               <div key={photo.id} className="glass-panel" style={{ padding: '0', overflow: 'hidden', position: 'relative' }}>
                 <img 
-                  src={`http://localhost:8080${photo.photoUrl}`} 
+                  src={`${API_URL}${photo.photoUrl}`} 
                   alt="Progress" 
                   style={{ width: '100%', height: '250px', objectFit: 'cover', display: 'block' }} 
                   onError={(e) => { e.target.src = FALLBACK_IMAGE; }}

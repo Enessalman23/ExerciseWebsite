@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+
 const axiosClient = axios.create({
-  baseURL: 'http://localhost:8080', // Spring Boot default port
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -26,7 +28,7 @@ axiosClient.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem('refreshToken');
         if (refreshToken) {
-          const res = await axios.post('http://localhost:8080/api/auth/refresh', {
+          const res = await axios.post(`${API_URL}/api/auth/refresh`, {
             token: refreshToken
           });
           
