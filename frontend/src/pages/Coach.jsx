@@ -1,6 +1,8 @@
 import React from 'react';
 import { Send, User, Bot, Sparkles, Mic, Volume2, VolumeX, Target, Activity, ChefHat } from 'lucide-react';
 import { useCoachChat } from '../hooks/useCoachChat';
+import ReactMarkdown from 'react-markdown';
+
 
 const Coach = () => {
   const {
@@ -82,10 +84,17 @@ const Coach = () => {
                   lineHeight: 1.6,
                   border: msg.role === 'assistant' ? '1px solid var(--glass-border)' : 'none',
                   backdropFilter: msg.role === 'assistant' ? 'blur(10px)' : 'none',
-                  boxShadow: msg.role === 'user' ? '0 15px 30px rgba(0,0,0,0.2)' : 'none'
+                  boxShadow: msg.role === 'user' ? '0 15px 30px rgba(0,0,0,0.2)' : 'none',
+                  whiteSpace: msg.role === 'user' ? 'pre-wrap' : 'normal'
                 }}
               >
-                {msg.text}
+                {msg.role === 'user' ? (
+                  msg.text
+                ) : (
+                  <div className="markdown-content">
+                    <ReactMarkdown>{msg.text}</ReactMarkdown>
+                  </div>
+                )}
               </div>
             </div>
           ))}

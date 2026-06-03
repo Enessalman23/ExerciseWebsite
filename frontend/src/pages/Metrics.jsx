@@ -335,28 +335,7 @@ const WorkoutPerformanceAnalysis = () => {
         </ResponsiveContainer>
       </div>
 
-      {/* Muscle Distribution */}
-      <div className="glass-panel" style={{ padding: '20px', height: '200px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px', fontSize: '0.8rem', fontWeight: 700 }}>
-          <PieIcon size={14} color="var(--secondary)" /> BÖLGESEL DAĞILIM
-        </div>
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={stats.muscleData}
-              innerRadius={40}
-              outerRadius={60}
-              paddingAngle={5}
-              dataKey="value"
-            >
-              {stats.muscleData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
+
 
       <div style={{
         background: 'var(--glass-bg)',
