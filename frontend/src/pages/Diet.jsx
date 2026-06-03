@@ -86,7 +86,7 @@ const Diet = () => {
     <div className="container" style={{ paddingTop: '50px', paddingBottom: '80px', maxWidth: '1200px' }}>
       <header className="flex justify-between items-center" style={{ marginBottom: '50px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <button onClick={() => navigate('/dashboard')} className="btn-secondary" style={{ width: '45px', height: '45px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={() => navigate('/dashboard')} className="btn btn-secondary" style={{ width: '45px', height: '45px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             &larr;
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X } from 'lucide-react';
+import { X, Award } from 'lucide-react';
 import { useWorkoutPlayer } from '../hooks/useWorkoutPlayer';
 import ExerciseDisplay from './workout/ExerciseDisplay';
 import WorkoutPlayerHeader from './workout/WorkoutPlayerHeader';
@@ -94,62 +94,38 @@ const WorkoutPlayer = ({ plan, onClose }) => {
         />
 
         {/* MAIN CONTENT AREA */}
-        <div style={{ 
-          flex: 1, 
-          display: 'grid', 
-          gridTemplateColumns: isFocused ? '1fr' : '1.4fr 0.6fr', 
-          gap: '40px', 
-          padding: isFocused ? '40px 100px' : '0 40px 40px', 
-          overflow: 'hidden',
-          transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
-        }}>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-            <ExerciseDisplay 
-              currentStep={currentStep}
-              currentWarmup={currentWarmup}
-              currentExercise={currentExercise}
-              restTimer={restTimer}
-              getImageUrl={getImageUrl}
-              warmupIdx={warmupIdx}
-              warmupExercises={warmupExercises}
-              exerciseIdx={exerciseIdx}
-              exercises={exercises}
-              isFocused={isFocused}
-            >
-              {!isFocused && (
-                <div style={{ display: 'flex', gap: '15px' }}>
-                  <div className="premium-glass-dark" style={{ padding: '25px 35px', textAlign: 'center', borderRadius: '30px', border: '1px solid var(--glass-border)' }}>
-                    <div style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--primary)', lineHeight: 1 }}>{currentExercise?.sets}</div>
-                    <div style={{ fontSize: '0.8rem', opacity: 0.6, fontWeight: 800, letterSpacing: '1px', marginTop: '5px' }}>TOPLAM SET</div>
-                  </div>
-                  <div className="premium-glass-dark" style={{ padding: '25px 35px', textAlign: 'center', borderRadius: '30px', border: '1px solid var(--glass-border)' }}>
-                    <div style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--secondary)', lineHeight: 1 }}>{currentExercise?.reps}</div>
-                    <div style={{ fontSize: '0.8rem', opacity: 0.6, fontWeight: 800, letterSpacing: '1px', marginTop: '5px' }}>TEKRAR HEDEFİ</div>
-                  </div>
-                </div>
-              )}
-            </ExerciseDisplay>
+        {currentStep === 'finished' ? (
+          <div className="custom-scrollbar animate-fade-in" style={{ 
+            flex: 1, 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'flex-start',
+            padding: '20px 40px 60px', 
+            overflowY: 'auto',
+            gap: '35px',
+            width: '100%',
+            maxWidth: '600px',
+            margin: '0 auto',
+            position: 'relative',
+            zIndex: 10
+          }}>
+            {/* Cinematic Icon & Title */}
+            <div className="text-center animate-slide-up" style={{ marginBottom: '10px' }}>
+              <div style={{ 
+                  background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                  width: '140px', height: '140px', borderRadius: '50%', margin: '0 auto',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 20px 60px var(--primary-glow)'
+              }}>
+                  <Award size={80} style={{ color: '#fff' }} />
+              </div>
+              <h2 className="text-glow" style={{ fontSize: '4.5rem', marginTop: '25px', fontWeight: 900, color: '#fff', letterSpacing: '-2px', margin: '20px 0 5px' }}>BİTTİ!</h2>
+              <p style={{ fontSize: '1.4rem', color: 'rgba(255,255,255,0.7)', fontWeight: 600, margin: 0 }}>Bugün harika bir iş çıkardın.</p>
+            </div>
 
-            {/* Next Exercise Preview (Mini HUD) */}
-            {(currentStep !== 'finished' && !isFocused) && (
-               <div className="glass-panel" style={{ padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)' }}>
-                  <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>SIRADAKİ:</div>
-                  <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#fff' }}>
-                    {currentStep === 'warmup' 
-                      ? (warmupIdx < warmupExercises.length - 1 ? warmupExercises[warmupIdx+1].exerciseName : exercises[0]?.exerciseName)
-                      : (exerciseIdx < exercises.length - 1 ? exercises[exerciseIdx+1].exerciseName : "Antrenman Sonu")}
-                  </div>
-               </div>
-            )}
-          </div>
-
-          {!isFocused && (
-            <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '30px', maxHeight: '100%', overflow: 'hidden' }}>
-              <WorkoutPlayerInstructions currentExercise={currentExercise} />
-              
-              <div style={{ flex: 1 }}></div>
-
+            {/* Rating card */}
+            <div style={{ width: '100%' }}>
               <WorkoutPlayerControls
                 currentStep={currentStep}
                 warmupIdx={warmupIdx}
@@ -158,45 +134,120 @@ const WorkoutPlayer = ({ plan, onClose }) => {
                 skipTimer={skipTimer}
                 onClose={onClose}
                 currentDayName={currentDay?.dayName}
+                planId={plan?.workoutPlanId}
+                currentDayIdx={currentDayIdx}
               />
             </div>
-          )}
-
-          {isFocused && (
-            <div style={{ 
-              position: 'fixed', bottom: '0', left: '0', right: '0', 
-              padding: '30px 60px', 
-              background: 'linear-gradient(to top, rgba(2, 6, 23, 0.95), transparent)',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              zIndex: 100, gap: '40px'
-            }}>
-               <div style={{ flex: 1 }}></div> {/* Spacer to keep controls centered */}
-               
-               <div style={{ width: '500px' }}>
-                 <WorkoutPlayerControls
-                    currentStep={currentStep}
-                    warmupIdx={warmupIdx}
-                    warmupExercises={warmupExercises}
-                    handleStepNext={handleStepNext}
-                    skipTimer={skipTimer}
-                    onClose={onClose}
-                    currentDayName={currentDay?.dayName}
-                  />
-               </div>
-
-               <div style={{ display: 'flex', gap: '15px', flex: 1, justifyContent: 'flex-end' }}>
-                  <div className="premium-glass-dark" style={{ padding: '15px 25px', textAlign: 'center', borderRadius: '20px', border: '1px solid var(--glass-border)', minWidth: '120px' }}>
-                    <div style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--primary)', lineHeight: 1 }}>{currentExercise?.sets}</div>
-                    <div style={{ fontSize: '0.65rem', opacity: 0.6, fontWeight: 800, letterSpacing: '1px', marginTop: '4px' }}>TOPLAM SET</div>
+          </div>
+        ) : (
+          <div style={{ 
+            flex: 1, 
+            display: 'grid', 
+            gridTemplateColumns: isFocused ? '1fr' : '1.4fr 0.6fr', 
+            gap: '40px', 
+            padding: isFocused ? '40px 100px' : '0 40px 40px', 
+            overflow: 'hidden',
+            transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+              <ExerciseDisplay 
+                currentStep={currentStep}
+                currentWarmup={currentWarmup}
+                currentExercise={currentExercise}
+                restTimer={restTimer}
+                getImageUrl={getImageUrl}
+                warmupIdx={warmupIdx}
+                warmupExercises={warmupExercises}
+                exerciseIdx={exerciseIdx}
+                exercises={exercises}
+                isFocused={isFocused}
+              >
+                {!isFocused && (
+                  <div style={{ display: 'flex', gap: '15px' }}>
+                    <div className="premium-glass-dark" style={{ padding: '25px 35px', textAlign: 'center', borderRadius: '30px', border: '1px solid var(--glass-border)' }}>
+                      <div style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--primary)', lineHeight: 1 }}>{currentExercise?.sets}</div>
+                      <div style={{ fontSize: '0.8rem', opacity: 0.6, fontWeight: 800, letterSpacing: '1px', marginTop: '5px' }}>TOPLAM SET</div>
+                    </div>
+                    <div className="premium-glass-dark" style={{ padding: '25px 35px', textAlign: 'center', borderRadius: '30px', border: '1px solid var(--glass-border)' }}>
+                      <div style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--secondary)', lineHeight: 1 }}>{currentExercise?.reps}</div>
+                      <div style={{ fontSize: '0.8rem', opacity: 0.6, fontWeight: 800, letterSpacing: '1px', marginTop: '5px' }}>TEKRAR HEDEFİ</div>
+                    </div>
                   </div>
-                  <div className="premium-glass-dark" style={{ padding: '15px 25px', textAlign: 'center', borderRadius: '20px', border: '1px solid var(--glass-border)', minWidth: '120px' }}>
-                    <div style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--secondary)', lineHeight: 1 }}>{currentExercise?.reps}</div>
-                    <div style={{ fontSize: '0.65rem', opacity: 0.6, fontWeight: 800, letterSpacing: '1px', marginTop: '4px' }}>TEKRAR</div>
-                  </div>
-               </div>
+                )}
+              </ExerciseDisplay>
+
+              {/* Next Exercise Preview (Mini HUD) */}
+              {(currentStep !== 'finished' && !isFocused) && (
+                 <div className="glass-panel" style={{ padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)' }}>
+                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>SIRADAKİ:</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#fff' }}>
+                      {currentStep === 'warmup' 
+                        ? (warmupIdx < warmupExercises.length - 1 ? warmupExercises[warmupIdx+1].exerciseName : exercises[0]?.exerciseName)
+                        : (exerciseIdx < exercises.length - 1 ? exercises[exerciseIdx+1].exerciseName : "Antrenman Sonu")}
+                    </div>
+                 </div>
+              )}
             </div>
-          )}
-        </div>
+
+            {!isFocused && (
+              <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '30px', maxHeight: '100%', overflow: 'hidden' }}>
+                <WorkoutPlayerInstructions currentExercise={currentExercise} />
+                
+                <div style={{ flex: 1 }}></div>
+
+                <WorkoutPlayerControls
+                  currentStep={currentStep}
+                  warmupIdx={warmupIdx}
+                  warmupExercises={warmupExercises}
+                  handleStepNext={handleStepNext}
+                  skipTimer={skipTimer}
+                  onClose={onClose}
+                  currentDayName={currentDay?.dayName}
+                  planId={plan?.workoutPlanId}
+                  currentDayIdx={currentDayIdx}
+                />
+              </div>
+            )}
+
+            {(isFocused && currentStep !== 'finished') && (
+              <div style={{ 
+                position: 'fixed', bottom: '0', left: '0', right: '0', 
+                padding: '30px 60px', 
+                background: 'linear-gradient(to top, rgba(2, 6, 23, 0.95), transparent)',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                zIndex: 100, gap: '40px'
+              }}>
+                 <div style={{ flex: 1 }}></div> {/* Spacer to keep controls centered */}
+                 
+                 <div style={{ width: '500px' }}>
+                   <WorkoutPlayerControls
+                      currentStep={currentStep}
+                      warmupIdx={warmupIdx}
+                      warmupExercises={warmupExercises}
+                      handleStepNext={handleStepNext}
+                      skipTimer={skipTimer}
+                      onClose={onClose}
+                      currentDayName={currentDay?.dayName}
+                      planId={plan?.workoutPlanId}
+                      currentDayIdx={currentDayIdx}
+                    />
+                 </div>
+
+                 <div style={{ display: 'flex', gap: '15px', flex: 1, justifyContent: 'flex-end' }}>
+                    <div className="premium-glass-dark" style={{ padding: '15px 25px', textAlign: 'center', borderRadius: '20px', border: '1px solid var(--glass-border)', minWidth: '120px' }}>
+                      <div style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--primary)', lineHeight: 1 }}>{currentExercise?.sets}</div>
+                      <div style={{ fontSize: '0.65rem', opacity: 0.6, fontWeight: 800, letterSpacing: '1px', marginTop: '4px' }}>TOPLAM SET</div>
+                    </div>
+                    <div className="premium-glass-dark" style={{ padding: '15px 25px', textAlign: 'center', borderRadius: '20px', border: '1px solid var(--glass-border)', minWidth: '120px' }}>
+                      <div style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--secondary)', lineHeight: 1 }}>{currentExercise?.reps}</div>
+                      <div style={{ fontSize: '0.65rem', opacity: 0.6, fontWeight: 800, letterSpacing: '1px', marginTop: '4px' }}>TEKRAR</div>
+                    </div>
+                 </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -641,8 +641,9 @@ body.light-theme .nav-item.active {
 }
 
 /* Workout Mode Active State */
-body.workout-mode-active .sidebar-container,
-body.workout-mode-active .navbar {
+body.workout-mode-active .sidebar-glass,
+body.workout-mode-active .navbar,
+body.workout-mode-active .mobile-bottom-nav-wrapper {
   display: none !important;
 }
 
@@ -672,7 +673,7 @@ body.workout-mode-active .container {
     overflow-x: hidden !important;
   }
 
-  .sidebar-container {
+  .sidebar-glass {
     display: none !important; /* Hide desktop sidebar */
   }
 

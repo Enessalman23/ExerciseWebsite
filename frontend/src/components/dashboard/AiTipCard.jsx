@@ -87,7 +87,7 @@ const AiTipCard = ({ metrics }) => {
               {currentGoal.icon}
             </div>
             <div>
-              <h3 style={{ fontSize: '1.2rem', margin: 0, fontWeight: 800 }}>AI Günlük Tavsiyesi</h3>
+              <h3 style={{ fontSize: '1.2rem', margin: 0, fontWeight: 800 }}>Günlük Tavsiye</h3>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
                 Hedef: <span style={{ color: currentGoal.color, fontWeight: 800 }}>{currentGoal.title}</span>
               </span>
