@@ -156,6 +156,3 @@ PostgreSQL üzerinde `fitnessai` şeması altında koşan tablolarımız ve ili�
     `http://localhost:5173`
 
 ---
-
-## 🎓 Lisans ve Bitirme Projesi Beyanı / *Academic Disclaimer*
-Bu proje, **T.C. İstanbul Topkapı Üniversitesi Mühendislik Fakültesi Bilgisayar Mühendisliği Bölümü** bünyesinde **Enes Bahadır Salman (22040101041)** tarafından bitirme projesi olarak geliştirilmiştir. Projenin tüm akademik hakları saklıdır.
