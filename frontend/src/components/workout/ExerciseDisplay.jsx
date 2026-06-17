@@ -146,7 +146,34 @@ const ExerciseDisplay = ({
             </h2>
             <div style={{ display: 'flex', gap: '20px', marginTop: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
               <span className="workout-badge workout-badge-primary" style={{ fontSize: '0.9rem', padding: '6px 16px', fontWeight: 900 }}>{currentExercise?.targetMuscle?.toUpperCase()}</span>
-              <span style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>{currentStep === 'warmup' ? `${warmupIdx + 1} / ${warmupExercises.length}` : `${exerciseIdx + 1} / ${exercises.length}`}</span>
+              
+              {/* Progress Bar indicator */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'rgba(255,255,255,0.03)', padding: '10px 20px', borderRadius: '18px', border: '1px solid var(--glass-border)', boxShadow: '0 8px 30px rgba(0,0,0,0.1)' }}>
+                <div style={{ 
+                  width: '180px', 
+                  height: '10px', 
+                  background: 'rgba(255, 255, 255, 0.08)', 
+                  borderRadius: '10px', 
+                  overflow: 'hidden',
+                  position: 'relative'
+                }}>
+                  <div style={{ 
+                    height: '100%', 
+                    width: `${
+                      currentStep === 'warmup' 
+                        ? (warmupExercises.length > 0 ? ((warmupIdx + 1) / warmupExercises.length) * 100 : 0)
+                        : (exercises.length > 0 ? ((exerciseIdx + 1) / exercises.length) * 100 : 0)
+                    }%`,
+                    background: currentStep === 'warmup' ? 'linear-gradient(to right, #38bdf8, #0ea5e9)' : 'linear-gradient(to right, var(--primary), var(--secondary))',
+                    borderRadius: '10px',
+                    transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: currentStep === 'warmup' ? '0 0 10px rgba(14, 165, 233, 0.6)' : '0 0 10px var(--primary-glow)'
+                  }}></div>
+                </div>
+                <span style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.85)', fontWeight: 900, fontFamily: 'monospace', minWidth: '55px', textAlign: 'right' }}>
+                  {currentStep === 'warmup' ? `${warmupIdx + 1}/${warmupExercises.length}` : `${exerciseIdx + 1}/${exercises.length}`}
+                </span>
+              </div>
               {currentStep === 'exercise' && currentExercise?.isAlternative && (
                 <span style={{ 
                   fontSize: '0.75rem', 

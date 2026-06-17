@@ -124,6 +124,7 @@ public class AiGenerationService {
                 "1. Warmup: DO NOT include warmup exercises. Focus only on the main workout.\n" +
                 "2. NAMING: Use standard names like 'Barbell Bench Press', 'Dumbbell Row', 'Lunge', 'Push-up'. ALWAYS include the equipment in the name (Barbell, Dumbbell, Cable, Bodyweight).\n" +
                 "3. VARIETY: ABSOLUTELY NO DUPLICATES across all " + days + " days.\n" +
+                "4. QUANTITY: Each day MUST contain exactly 6 distinct exercises in the 'exercises' array. Not 4, not 5, but exactly 6 exercises.\n" +
                 "--- JSON OUTPUT FORMAT ---\n" +
                 "ONLY output valid JSON. Format exactly:\n" +
                 "{ \"days\": [ { \"dayName\": \"1. Gün...\", \"exercises\": [ { \"exerciseName\": \"Example\", \"targetMuscle\": \"pectorals\", \"sets\": 3, \"reps\": 12, \"rest\": \"90 sn\", \"isAlternative\": false, \"replacedExercise\": null, \"injuryReason\": null } ] } ] }.";

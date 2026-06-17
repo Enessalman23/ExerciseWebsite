@@ -14,6 +14,33 @@ const WorkoutCard = ({
   const planData = JSON.parse(item.workoutPlanJson);
   const isExpanded = expandedPlan === item.workoutPlanId;
   const isCorrupted = planData === "CORRUPTED";
+  const isPredefined = typeof item.workoutPlanId === 'string' && item.workoutPlanId.startsWith('predefined_');
+
+  // Check if there is saved progress or if some days are completed
+  const hasSavedState = () => {
+    if (!planData || planData === "CORRUPTED" || !planData.days) return false;
+    for (let i = 0; i < planData.days.length; i++) {
+      if (localStorage.getItem(`workout_state_${item.workoutPlanId}_${i}`)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const getCompletedDaysCount = () => {
+    try {
+      const saved = localStorage.getItem(`completed_days_${item.workoutPlanId}`);
+      const completed = saved ? JSON.parse(saved) : [];
+      return completed.length;
+    } catch {
+      return 0;
+    }
+  };
+
+  const totalDays = planData?.days?.length || 0;
+  const completedCount = getCompletedDaysCount();
+  const allCompleted = totalDays > 0 && completedCount >= totalDays;
+  const inProgress = hasSavedState() || (completedCount > 0 && !allCompleted);
   
   return (
     <div 
@@ -76,9 +103,9 @@ const WorkoutCard = ({
                     }
                   }} 
                   className="btn btn-primary" 
-                  style={{ height: '56px', padding: '0 30px', borderRadius: '18px', fontSize: '1rem', fontWeight: 800 }}
+                  style={{ height: '56px', padding: '0 30px', borderRadius: '18px', fontSize: '1rem', fontWeight: 800, background: allCompleted ? '#0ea5e9' : (inProgress ? '#10b981' : 'var(--primary)') }}
                >
-                  <PlayCircle size={22} /> BAŞLAT
+                  <PlayCircle size={22} /> {allCompleted ? "YENİDEN BAŞLAT" : (inProgress ? "DEVAM ET" : "BAŞLAT")}
                </button>
             )}
             <button 
@@ -88,13 +115,15 @@ const WorkoutCard = ({
             >
                {isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
             </button>
-            <button 
-              onClick={(e) => { e.stopPropagation(); handleDeleteWorkout(item.workoutPlanId); }} 
-              className="hover-glow-error hover-scale" 
-              style={{ width: '56px', height: '56px', borderRadius: '18px', background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.2)', color: '#f43f5e', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'var(--transition)' }}
-            >
-               <Trash2 size={22} />
-            </button>
+            {!isPredefined && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); handleDeleteWorkout(item.workoutPlanId); }} 
+                className="hover-glow-error hover-scale" 
+                style={{ width: '56px', height: '56px', borderRadius: '18px', background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.2)', color: '#f43f5e', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'var(--transition)' }}
+              >
+                 <Trash2 size={22} />
+              </button>
+            )}
          </div>
       </div>
 
@@ -136,9 +165,17 @@ const WorkoutCard = ({
                             }
                           }}
                           className="btn btn-primary"
-                          style={{ padding: '6px 14px', fontSize: '0.75rem', borderRadius: '10px' }}
+                          style={{ 
+                             padding: '6px 14px', 
+                             fontSize: '0.75rem', 
+                             borderRadius: '10px',
+                             background: isCompleted ? 'rgba(16, 185, 129, 0.15)' : (localStorage.getItem(`workout_state_${item.workoutPlanId}_${dIdx}`) ? '#10b981' : 'var(--primary)'),
+                             border: isCompleted ? '1px solid var(--success)' : 'none',
+                             color: isCompleted ? 'var(--success)' : '#fff',
+                             fontWeight: 800
+                          }}
                        >
-                          BAŞLAT
+                          {isCompleted ? "TEKRARLA" : (localStorage.getItem(`workout_state_${item.workoutPlanId}_${dIdx}`) ? "DEVAM ET" : "BAŞLAT")}
                        </button>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>

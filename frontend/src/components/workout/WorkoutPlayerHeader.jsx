@@ -2,8 +2,7 @@ import { X, CheckCircle2, Zap, Volume2, VolumeX } from 'lucide-react';
 
 const WorkoutPlayerHeader = ({ 
   plan, currentDay, currentDayIdx, completedDays, 
-  setCurrentDayIdx, setCurrentStep, setExerciseIdx, 
-  setWarmupIdx, stopTimer, onClose, warmupExercises, 
+  changeDay, onClose, 
   isFocused, isMuted, setIsMuted
 }) => {
   return (
@@ -27,11 +26,7 @@ const WorkoutPlayerHeader = ({
               <button 
                 key={idx} 
                 onClick={() => {
-                  setCurrentDayIdx(idx);
-                  setCurrentStep(warmupExercises.length > 0 ? 'warmup' : 'exercise');
-                  setExerciseIdx(0);
-                  setWarmupIdx(0);
-                  stopTimer();
+                  changeDay(idx);
                 }}
                 style={{ 
                   padding: '8px 18px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800, 

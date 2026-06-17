@@ -47,5 +47,9 @@ export const useWorkoutTimer = (onTimerComplete) => {
     if (onCompleteRef.current) onCompleteRef.current();
   }, []);
 
-  return { restTimer, isTimerActive, startTimer, stopTimer, skipTimer };
+  const addTime = useCallback((seconds) => {
+    setRestTimer(prev => prev + seconds);
+  }, []);
+
+  return { restTimer, isTimerActive, startTimer, stopTimer, skipTimer, addTime };
 };

@@ -10,7 +10,8 @@ const WorkoutPlayerControls = ({
   onClose, 
   currentDayName,
   planId,
-  currentDayIdx
+  currentDayIdx,
+  addTime
 }) => {
   const [rpe, setRpe] = useState(5);
 
@@ -48,13 +49,32 @@ const WorkoutPlayerControls = ({
       )}
 
       {currentStep === 'rest' && (
-        <button 
-          onClick={skipTimer} 
-          className="btn btn-secondary" 
-          style={{ padding: '20px', fontSize: '1.3rem', borderRadius: '24px', border: '1px solid var(--glass-border)', color: '#fff', fontWeight: 700, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(255,255,255,0.05)' }}
-        >
-          Dinlenmeyi Atla <SkipForward size={24} style={{ marginLeft: '15px' }} />
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+          <button 
+            onClick={skipTimer} 
+            className="btn btn-secondary" 
+            style={{ padding: '20px', fontSize: '1.3rem', borderRadius: '24px', border: '1px solid var(--glass-border)', color: '#fff', fontWeight: 700, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(255,255,255,0.05)', width: '100%' }}
+          >
+            Dinlenmeyi Atla <SkipForward size={24} style={{ marginLeft: '15px' }} />
+          </button>
+          
+          <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
+            <button 
+              onClick={() => addTime?.(30)}
+              className="btn btn-secondary" 
+              style={{ flex: 1, padding: '15px', fontSize: '1.1rem', borderRadius: '18px', border: '1px solid var(--glass-border)', color: '#fff', fontWeight: 700, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(255,255,255,0.02)' }}
+            >
+              +30 sn
+            </button>
+            <button 
+              onClick={() => addTime?.(60)}
+              className="btn btn-secondary" 
+              style={{ flex: 1, padding: '15px', fontSize: '1.1rem', borderRadius: '18px', border: '1px solid var(--glass-border)', color: '#fff', fontWeight: 700, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(255,255,255,0.02)' }}
+            >
+              +60 sn
+            </button>
+          </div>
+        </div>
       )}
 
       {currentStep === 'finished' && (

@@ -25,15 +25,11 @@ const WorkoutPlayer = ({ plan, onClose }) => {
 
   const {
     currentDayIdx,
-    setCurrentDayIdx,
     currentDay,
     warmupExercises,
     exercises,
     currentStep,
-    setCurrentStep,
     exerciseIdx,
-    setExerciseIdx,
-    setWarmupIdx,
     warmupIdx,
     completedDays,
     currentWarmup,
@@ -45,9 +41,10 @@ const WorkoutPlayer = ({ plan, onClose }) => {
     setIsMuted,
     restTimer,
     skipTimer,
-    stopTimer,
     toggleFullScreen,
-    handleStepNext
+    handleStepNext,
+    addTime,
+    changeDay
   } = player;
 
   return (
@@ -80,13 +77,8 @@ const WorkoutPlayer = ({ plan, onClose }) => {
           currentDay={currentDay}
           currentDayIdx={currentDayIdx}
           completedDays={completedDays}
-          setCurrentDayIdx={setCurrentDayIdx}
-          setCurrentStep={setCurrentStep}
-          setExerciseIdx={setExerciseIdx}
-          setWarmupIdx={setWarmupIdx}
-          stopTimer={stopTimer}
+          changeDay={changeDay}
           onClose={onClose}
-          warmupExercises={warmupExercises}
           toggleFullScreen={toggleFullScreen}
           isFocused={isFocused}
           isMuted={isMuted}
@@ -136,6 +128,7 @@ const WorkoutPlayer = ({ plan, onClose }) => {
                 currentDayName={currentDay?.dayName}
                 planId={plan?.workoutPlanId}
                 currentDayIdx={currentDayIdx}
+                addTime={addTime}
               />
             </div>
           </div>
@@ -206,6 +199,7 @@ const WorkoutPlayer = ({ plan, onClose }) => {
                   currentDayName={currentDay?.dayName}
                   planId={plan?.workoutPlanId}
                   currentDayIdx={currentDayIdx}
+                  addTime={addTime}
                 />
               </div>
             )}
@@ -221,17 +215,18 @@ const WorkoutPlayer = ({ plan, onClose }) => {
                  <div style={{ flex: 1 }}></div> {/* Spacer to keep controls centered */}
                  
                  <div style={{ width: '500px' }}>
-                   <WorkoutPlayerControls
-                      currentStep={currentStep}
-                      warmupIdx={warmupIdx}
-                      warmupExercises={warmupExercises}
-                      handleStepNext={handleStepNext}
-                      skipTimer={skipTimer}
-                      onClose={onClose}
-                      currentDayName={currentDay?.dayName}
-                      planId={plan?.workoutPlanId}
-                      currentDayIdx={currentDayIdx}
-                    />
+                    <WorkoutPlayerControls
+                       currentStep={currentStep}
+                       warmupIdx={warmupIdx}
+                       warmupExercises={warmupExercises}
+                       handleStepNext={handleStepNext}
+                       skipTimer={skipTimer}
+                       onClose={onClose}
+                       currentDayName={currentDay?.dayName}
+                       planId={plan?.workoutPlanId}
+                       currentDayIdx={currentDayIdx}
+                       addTime={addTime}
+                     />
                  </div>
 
                  <div style={{ display: 'flex', gap: '15px', flex: 1, justifyContent: 'flex-end' }}>

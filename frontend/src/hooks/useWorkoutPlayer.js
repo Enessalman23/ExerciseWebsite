@@ -3,10 +3,50 @@ import { useWorkoutTimer } from './useWorkoutTimer';
 import { useVoiceGuidance } from './useVoiceGuidance';
 
 export const useWorkoutPlayer = (plan) => {
+  const storageKey = `completed_days_${plan?.workoutPlanId || 'default'}`;
+
+  // Helper to check saved state on initialization
+  const getInitialStateForDay = (dayIdx) => {
+    if (!plan?.workoutPlanId) return null;
+    try {
+      const saved = localStorage.getItem(`workout_state_${plan.workoutPlanId}_${dayIdx}`);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return null;
+  };
+
   const [currentDayIdx, setCurrentDayIdx] = useState(() => {
     try {
-      const startIdx = plan?.startDayIdx || 0;
-      return (plan?.days && startIdx >= 0 && startIdx < plan.days.length) ? startIdx : 0;
+      // 1. If a specific day index was requested, use it
+      if (plan?.startDayIdx !== undefined && plan.startDayIdx !== null) {
+        return plan.startDayIdx;
+      }
+      
+      // 2. Otherwise, check if there is a day that has saved progress (partially completed)
+      if (plan?.days && plan?.workoutPlanId) {
+        for (let i = 0; i < plan.days.length; i++) {
+          const savedState = localStorage.getItem(`workout_state_${plan.workoutPlanId}_${i}`);
+          if (savedState) {
+            return i; // Resume this day!
+          }
+        }
+      }
+      
+      // 3. Otherwise, check for the first uncompleted day
+      const savedCompleted = localStorage.getItem(storageKey);
+      const completedDaysList = savedCompleted ? JSON.parse(savedCompleted) : [];
+      if (plan?.days) {
+        for (let i = 0; i < plan.days.length; i++) {
+          if (!completedDaysList.includes(i)) {
+            return i; // Start the first uncompleted day!
+          }
+        }
+      }
+      
+      // 4. Default fallback to 0
+      return 0;
     } catch {
       return 0;
     }
@@ -16,14 +56,23 @@ export const useWorkoutPlayer = (plan) => {
   const warmupExercises = currentDay?.warmupExercises || [];
   const exercises = currentDay?.exercises || [];
 
+  const initialSaved = getInitialStateForDay(currentDayIdx);
+
   const [currentStep, setCurrentStep] = useState(() => {
+    if (initialSaved && initialSaved.currentStep) return initialSaved.currentStep;
     return warmupExercises.length > 0 ? 'warmup' : 'exercise';
   });
-  const [exerciseIdx, setExerciseIdx] = useState(0);
-  const [warmupIdx, setWarmupIdx] = useState(0);
 
-  // Kalıcı ilerleme takibi için localStorage kullanıyoruz
-  const storageKey = `completed_days_${plan?.workoutPlanId || 'default'}`;
+  const [exerciseIdx, setExerciseIdx] = useState(() => {
+    if (initialSaved && initialSaved.exerciseIdx !== undefined) return initialSaved.exerciseIdx;
+    return 0;
+  });
+
+  const [warmupIdx, setWarmupIdx] = useState(() => {
+    if (initialSaved && initialSaved.warmupIdx !== undefined) return initialSaved.warmupIdx;
+    return 0;
+  });
+
   const [completedDays, setCompletedDays] = useState(() => {
     const saved = localStorage.getItem(storageKey);
     return saved ? JSON.parse(saved) : [];
@@ -34,7 +83,7 @@ export const useWorkoutPlayer = (plan) => {
 
   const handleStepNextRef = useRef();
 
-  const { restTimer, startTimer, stopTimer, skipTimer } = useWorkoutTimer(() => handleStepNextRef.current?.());
+  const { restTimer, startTimer, stopTimer, skipTimer, addTime } = useWorkoutTimer(() => handleStepNextRef.current?.());
 
   const handleStepNext = useCallback(() => {
     if (currentStep === 'warmup') {
@@ -156,6 +205,75 @@ export const useWorkoutPlayer = (plan) => {
     }
   }, []);
 
+  // Save progress state to localStorage whenever it changes
+  useEffect(() => {
+    if (!plan?.workoutPlanId) return;
+    if (currentStep === 'finished') {
+      localStorage.removeItem(`workout_state_${plan.workoutPlanId}_${currentDayIdx}`);
+      return;
+    }
+    const stateToSave = {
+      currentStep,
+      exerciseIdx,
+      warmupIdx
+    };
+    localStorage.setItem(`workout_state_${plan.workoutPlanId}_${currentDayIdx}`, JSON.stringify(stateToSave));
+  }, [currentStep, exerciseIdx, warmupIdx, currentDayIdx, plan?.workoutPlanId]);
+
+  // Loop/reset mechanism: If all days were completed, starting again resets the completion state
+  useEffect(() => {
+    if (plan?.days && plan?.days.length > 0 && plan?.workoutPlanId) {
+      const totalDaysCount = plan.days.length;
+      const saved = localStorage.getItem(storageKey);
+      const parsed = saved ? JSON.parse(saved) : [];
+      if (parsed.length >= totalDaysCount) {
+        // All days are completed, reset completion list and start from day 0
+        localStorage.removeItem(storageKey);
+        setCompletedDays([]);
+        setCurrentDayIdx(0);
+        
+        // Also clear any saved active day states to start completely fresh
+        for (let i = 0; i < totalDaysCount; i++) {
+          localStorage.removeItem(`workout_state_${plan.workoutPlanId}_${i}`);
+        }
+        
+        // Reset step/indices to initial values of Day 0
+        const day = plan.days[0];
+        const dayWarmups = day?.warmupExercises || [];
+        setCurrentStep(dayWarmups.length > 0 ? 'warmup' : 'exercise');
+        setExerciseIdx(0);
+        setWarmupIdx(0);
+      }
+    }
+  }, [plan, storageKey]);
+
+  // changeDay handler for switching days inside the player safely
+  const changeDay = useCallback((idx) => {
+    setCurrentDayIdx(idx);
+    stopTimer();
+    
+    // Check if there is saved progress for this new day
+    try {
+      const saved = localStorage.getItem(`workout_state_${plan?.workoutPlanId}_${idx}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.currentStep) setCurrentStep(parsed.currentStep);
+        if (parsed.exerciseIdx !== undefined) setExerciseIdx(parsed.exerciseIdx);
+        if (parsed.warmupIdx !== undefined) setWarmupIdx(parsed.warmupIdx);
+        return;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    
+    // Default reset if no saved progress
+    const targetDay = plan?.days?.[idx];
+    const targetWarmups = targetDay?.warmupExercises || [];
+    setCurrentStep(targetWarmups.length > 0 ? 'warmup' : 'exercise');
+    setExerciseIdx(0);
+    setWarmupIdx(0);
+  }, [plan, stopTimer]);
+
   return {
     currentDayIdx,
     setCurrentDayIdx,
@@ -181,6 +299,8 @@ export const useWorkoutPlayer = (plan) => {
     skipTimer,
     stopTimer,
     toggleFullScreen,
-    handleStepNext
+    handleStepNext,
+    addTime,
+    changeDay
   };
 };
